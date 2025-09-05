@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { useAppStore } from '../stores/counter'
 import { useRouter } from 'vue-router'
+import { scanWebsite } from '../api/scanService'
+import { useScanStore } from '../stores/scanStore'
 
 const title = '你访问的网络安全吗？'
 const subtitle = '网站安全扫描器，一键检测，安全上网'
 
 const router = useRouter()
-const appStore = useAppStore()
+const scanStore = useScanStore()
 
 const targetUrl = ref('')
 const urlError = ref('')
@@ -21,7 +22,7 @@ const scanProgress = ref(0)
 const scanStatus = ref('')
 const hasScanned = ref(false)
 
-const isScanning = computed(() => appStore.isScanning)
+const isScanning = ref(false)
 
 const isValidUrl = computed(() => {
   if (!targetUrl.value) return false
@@ -47,41 +48,35 @@ const validateUrl = (url: string) => {
   }
 }
 
-const simulateScan = async () => {
-  const steps = [
-    '正在连接目标网站...',
-    '检测SSL/TLS配置...',
-    '分析HTTP安全头...',
-    '扫描常见漏洞...',
-    '生成检测报告...',
-  ]
 
-  for (let i = 0; i < steps.length; i++) {
-    scanStatus.value = steps[i]
-    scanProgress.value = ((i + 1) / steps.length) * 100
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-  }
-}
 
 const startScan = async () => {
   if (!isValidUrl.value || isScanning.value) return
 
+  isScanning.value = true
   hasScanned.value = true
+  urlError.value = ''
 
   try {
-    const scan = appStore.startScan(targetUrl.value, scanOptions.value)
-    await simulateScan()
+    const response = await scanWebsite(targetUrl.value, scanOptions.value)
+    scanStore.setScanResult({
+      url: targetUrl.value,
+      options: scanOptions.value,
+      scanId: response.scanId
+    })
 
     router.push({
       name: 'ScanResult',
       params: {
-        url: targetUrl.value,
-        options: JSON.stringify(scanOptions.value),
-      },
+        scanId: response.scanId
+      }
     })
-  } catch (error) {
-    console.error('扫描失败:', error)
-    urlError.value = '扫描失败，请稍后重试'
+  } catch (error: unknown) {
+    const err = error as Error
+    console.error('扫描失败:', err)
+    urlError.value = err.message || '扫描失败，请稍后重试'
+  } finally {
+    isScanning.value = false
   }
 }
 </script>

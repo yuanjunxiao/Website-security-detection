@@ -16,6 +16,8 @@
     "format": "prettier --write src/"
   },
   "dependencies": {
+    "@types/axios": "^0.9.36",
+    "axios": "^1.11.0",
     "pinia": "^3.0.3",
     "vue": "^3.5.18",
     "vue-router": "^4.5.1"
