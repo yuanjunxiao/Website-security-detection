@@ -7,11 +7,11 @@ const route = useRoute()
 const isMobileMenuOpen = ref(false)
 
 const navigationItems = [
-  { name: '首页', path: '/' },
+  // { name: '首页', path: '/' },
   { name: '扫描历史', path: '/history' },
   { name: '设置', path: '/settings' },
   { name: '帮助', path: '/help' },
-  { name: '关于', path: '/about' }
+  { name: '关于', path: '/about' },
 ]
 
 const toggleMobileMenu = () => {
@@ -73,20 +73,10 @@ const isActive = (path: string) => {
 
 <style scoped>
 .app-navigation {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(102, 126, 234, 0.1);
-  position: sticky;
-  top: 0;
-  z-index: 1000;
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.08);
-  width: 100%;
-  flex-shrink: 0;
-}
-
-.nav-container {
-  max-width: 1200px;
-  margin: 0 auto;
+  display: none;
+  width: 0;
+  height: 0;
+  overflow: hidden;
   padding: 0 2rem;
   display: flex;
   align-items: center;

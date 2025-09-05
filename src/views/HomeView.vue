@@ -3,8 +3,8 @@ import { ref, computed } from 'vue'
 import { useAppStore } from '../stores/counter'
 import { useRouter } from 'vue-router'
 
-const title = '网站安全扫描器'
-const subtitle = '安全检测平台'
+const title = '你访问的网络安全吗？'
+const subtitle = '网站安全扫描器，一键检测，安全上网'
 
 const router = useRouter()
 const appStore = useAppStore()
@@ -93,7 +93,7 @@ const startScan = async () => {
       <p class="subtitle">{{ subtitle }}</p>
     </div>
 
-    <div class="content-wrapper">
+    <div class="content-wrapper" style="margin-top: -2rem">
       <div class="scan-section">
         <div class="input-container">
           <div class="input-group">
@@ -163,6 +163,7 @@ const startScan = async () => {
   padding: 0;
   position: relative;
   z-index: 1;
+  overflow: hidden;
 }
 
 .header-section {
