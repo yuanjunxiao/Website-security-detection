@@ -87,7 +87,7 @@ const viewScanResult = (scan: ScanRecord) => {
 
 const deleteScan = (id: number) => {
   if (confirm('确定要删除这条扫描记录吗？')) {
-    appStore.deleteScan(id)
+    appStore.deleteScanRecord(id)
   }
 }
 
@@ -95,7 +95,7 @@ const deleteSelected = () => {
   if (selectedItems.value.length === 0) return
 
   if (confirm(`确定要删除选中的 ${selectedItems.value.length} 条记录吗？`)) {
-    selectedItems.value.forEach(id => appStore.deleteScan(id))
+    selectedItems.value.forEach(id => appStore.deleteScanRecord(id))
     selectedItems.value = []
   }
 }
@@ -161,7 +161,7 @@ const getStatusText = (status: string) => {
 
 onMounted(() => {
   // Store会自动加载数据，如果需要可以调用初始化方法
-  appStore.loadScanHistory()
+  appStore.loadData()
 })
 </script>
 
