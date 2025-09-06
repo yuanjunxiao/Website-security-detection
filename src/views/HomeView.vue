@@ -5,7 +5,7 @@ import { scanWebsite } from '../api/scanService'
 import { useScanStore } from '../stores/scanStore'
 
 const title = '你访问的网络安全吗？'
-const subtitle = '网站安全扫描器，一键检测，安全上网'
+const subtitle = '网站安全扫描器，一键检测，安全上网(功能开发中，敬请期待)'
 
 const router = useRouter()
 const scanStore = useScanStore()
