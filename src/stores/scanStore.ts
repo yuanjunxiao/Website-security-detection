@@ -9,7 +9,9 @@ interface ScanResult {
     ports: boolean
     vulnerabilities: boolean
   }
-  scanId: string
+  scanId?: string
+  taskId?: string
+  status?: string
 }
 
 export const useScanStore = defineStore('scan', () => {

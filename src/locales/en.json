@@ -4,6 +4,8 @@
     "subtitle": "Quickly detect website security vulnerabilities and protect your website security",
     "scan": "Scan",
     "scanning": "Scanning...",
+    "creatingTask": "Creating scan task...",
+    "taskCreated": "Task created, starting scan...",
     "startScan": "Start Scan",
     "back": "Back",
     "download": "Download",

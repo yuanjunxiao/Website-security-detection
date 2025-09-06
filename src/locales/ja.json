@@ -5,6 +5,8 @@
     "language": "言語",
     "startScan": "スキャン開始",
     "scanning": "スキャン中...",
+    "creatingTask": "スキャンタスクを作成中...",
+    "taskCreated": "タスクが作成されました、スキャンを開始します...",
     "home": "ホーム",
     "history": "履歴",
     "settings": "設定"

@@ -123,18 +123,26 @@
 <script lang="ts">
 import { useI18n } from 'vue-i18n'
 import type { RouteParamValueRaw } from 'vue-router'
+import {
+  createScanTask,
+  pollScanTask,
+  type ScanTask,
+  calculateOverallRiskLevel,
+} from '../api/scanService'
 
 interface ScanRecord {
   id: number
   url: string
   timestamp: Date
-  status: 'completed' | 'failed' | 'scanning'
+  status: 'completed' | 'failed' | 'scanning' | 'pending'
   options: {
     ssl: boolean
     headers: boolean
     ports: boolean
     vulnerabilities: boolean
   }
+  taskId?: string
+  riskLevel?: string
 }
 
 export default {
@@ -197,28 +205,40 @@ export default {
     async startScan() {
       if (!this.isValidUrl || this.isScanning) return
 
+      this.urlError = ''
       this.isScanning = true
       this.scanProgress = 0
+      this.scanStatus = this.t('app.creatingTask')
       this.hasScanned = true
 
       try {
-        // 模拟扫描过程
-        await this.simulateScan()
+        // 创建扫描任务
+        const task = await createScanTask(this.targetUrl)
+
+        // 更新扫描状态
+        this.scanStatus = this.t('app.taskCreated')
+
+        // 开始轮询任务状态
+        const finalTask = await pollScanTask(task.taskId, (progressTask) => {
+          this.scanStatus = this.t('app.scanning')
+          this.scanProgress = this.calculateProgress(progressTask.status)
+        })
 
         // 保存扫描记录
-        this.saveScanRecord()
+        this.saveScanRecord(finalTask)
 
         // 跳转到结果页面
         this.$router.push({
           name: 'ScanResult',
           params: {
+            taskData: JSON.stringify(finalTask),
             url: this.targetUrl,
             options: JSON.stringify(this.scanOptions),
           },
         })
-      } catch (error) {
+      } catch (error: any) {
         console.error('扫描失败:', error)
-        this.urlError = this.t('errors.scanFailed')
+        this.urlError = error.message || this.t('errors.scanFailed')
       } finally {
         this.isScanning = false
       }
@@ -241,22 +261,42 @@ export default {
       }
     },
 
-    saveScanRecord() {
-      const scan = {
+    saveScanRecord(task?: ScanTask) {
+      const scan: ScanRecord = {
         id: Date.now(),
         url: this.targetUrl,
         timestamp: new Date(),
-        status: 'completed' as const,
+        status:
+          task?.status === 'completed'
+            ? 'completed'
+            : task?.status === 'failed'
+              ? 'failed'
+              : 'scanning',
         options: { ...this.scanOptions },
+        taskId: task?.taskId,
+        riskLevel: task ? calculateOverallRiskLevel(task.riskCount) : undefined,
       }
 
-      this.recentScans.unshift(scan as ScanRecord)
+      this.recentScans.unshift(scan)
       if (this.recentScans.length > 5) {
         this.recentScans.pop()
       }
 
       // 保存到本地存储
       localStorage.setItem('recentScans', JSON.stringify(this.recentScans))
+    },
+
+    calculateProgress(status: string): number {
+      const progressMap: Record<string, number> = {
+        pending: 10,
+        scanning_ssl: 25,
+        scanning_headers: 50,
+        scanning_ports: 75,
+        scanning_vulnerabilities: 90,
+        completed: 100,
+        failed: 100,
+      }
+      return progressMap[status] || 0
     },
 
     loadRecentScans() {
@@ -275,6 +315,7 @@ export default {
         params: {
           url: scan.url,
           options: JSON.stringify(scan.options),
+          ...(scan.taskId && { taskId: scan.taskId }),
         },
       })
     },
@@ -288,11 +329,12 @@ export default {
       })
     },
 
-    getStatusText(status: 'completed' | 'failed' | 'scanning') {
+    getStatusText(status: 'completed' | 'failed' | 'scanning' | 'pending') {
       const statusMap = {
         completed: '已完成',
         failed: '失败',
         scanning: '扫描中',
+        pending: '等待中',
       }
       return statusMap[status] || status
     },

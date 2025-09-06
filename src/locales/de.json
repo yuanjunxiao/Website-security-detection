@@ -5,6 +5,8 @@
     "language": "Sprache",
     "startScan": "Scan starten",
     "scanning": "Scannen...",
+    "creatingTask": "Scan-Task wird erstellt...",
+    "taskCreated": "Task erstellt, Scan wird gestartet...",
     "home": "Startseite",
     "history": "Verlauf",
     "settings": "Einstellungen"

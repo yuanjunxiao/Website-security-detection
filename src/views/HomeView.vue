@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { scanWebsite } from '../api/scanService'
+import { createScanTask, pollScanTask } from '../api/scanService'
 import { useScanStore } from '../stores/scanStore'
 
 const title = '你访问的网络安全吗？'
@@ -48,8 +48,6 @@ const validateUrl = (url: string) => {
   }
 }
 
-
-
 const startScan = async () => {
   if (!isValidUrl.value || isScanning.value) return
 
@@ -58,18 +56,24 @@ const startScan = async () => {
   urlError.value = ''
 
   try {
-    const response = await scanWebsite(targetUrl.value, scanOptions.value)
+    const task = await createScanTask(targetUrl.value)
+    // 开始轮询任务状态
+    const finalTask = await pollScanTask(task.taskId, (progressTask) => {
+      // 可以在这里更新进度状态
+    })
+
     scanStore.setScanResult({
       url: targetUrl.value,
       options: scanOptions.value,
-      scanId: response.scanId
+      taskId: finalTask.taskId,
+      status: finalTask.status,
     })
 
     router.push({
       name: 'ScanResult',
       params: {
-        scanId: response.scanId
-      }
+        taskId: finalTask.taskId,
+      },
     })
   } catch (error: unknown) {
     const err = error as Error
