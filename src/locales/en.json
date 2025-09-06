@@ -1,0 +1,91 @@
+{
+  "app": {
+    "title": "Website Security Scanner",
+    "subtitle": "Quickly detect website security vulnerabilities and protect your website security",
+    "scan": "Scan",
+    "scanning": "Scanning...",
+    "startScan": "Start Scan",
+    "back": "Back",
+    "download": "Download",
+    "rescan": "Rescan",
+    "settings": "Settings",
+    "help": "Help",
+    "about": "About",
+    "history": "History"
+  },
+  "home": {
+    "inputPlaceholder": "Enter the website URL to scan (e.g., https://example.com)",
+    "scanOptions": "Scan Options",
+    "sslCheck": "SSL/TLS Security Check",
+    "headersCheck": "HTTP Security Headers Check",
+    "portsCheck": "Port Scan",
+    "vulnerabilitiesCheck": "Common Vulnerability Detection",
+    "howToUse": "How to Use",
+    "step1": "Enter Website URL",
+    "step1Desc": "Enter the website address in the input box above",
+    "step2": "Select Scan Items",
+    "step2Desc": "Select security scan items as needed",
+    "step3": "Start Scan",
+    "step3Desc": "Click the \"Start Scan\" button and wait for the results",
+    "recentScans": "Recent Scans"
+  },
+  "scanResult": {
+    "title": "Security Scan Report",
+    "scanTime": "Scan Time",
+    "overallScore": "Overall Score",
+    "securityStatus": "Security Status",
+    "sslSecurity": "SSL/TLS Security",
+    "httpHeaders": "HTTP Security Headers",
+    "vulnerabilityDetection": "Vulnerability Detection",
+    "portScan": "Port Scan",
+    "recommendations": "Security Recommendations",
+    "sslRecommendation": "Strengthen SSL/TLS configuration, update SSL certificates, enable HSTS, disable insecure protocol versions",
+    "headersRecommendation": "Add security headers like Content-Security-Policy, X-Frame-Options",
+    "regularCheckRecommendation": "Perform comprehensive security scans monthly to identify potential risks"
+  },
+  "history": {
+    "title": "Scan History",
+    "description": "Manage and view your website security scan records",
+    "searchPlaceholder": "Search URL...",
+    "totalScans": "Total Scans",
+    "successfulScans": "Successful Scans",
+    "failedScans": "Failed Scans",
+    "averageScore": "Average Score",
+    "allStatus": "All Status",
+    "completed": "Completed",
+    "failed": "Failed",
+    "sortByTime": "Sort by Time",
+    "sortByScore": "Sort by Score",
+    "sortByUrl": "Sort by URL",
+    "export": "Export",
+    "deleteSelected": "Delete Selected",
+    "clearAll": "Clear All",
+    "noRecords": "No scan records",
+    "startScanPrompt": "Start your first security scan!",
+    "startScan": "Start Scan",
+    "url": "Website URL",
+    "scanTime": "Scan Time",
+    "status": "Status",
+    "score": "Score",
+    "duration": "Duration",
+    "actions": "Actions",
+    "view": "View",
+    "delete": "Delete"
+  },
+  "status": {
+    "excellent": "Excellent",
+    "good": "Good",
+    "warning": "Warning",
+    "danger": "Danger",
+    "completed": "Completed",
+    "failed": "Failed",
+    "scanning": "Scanning"
+  },
+  "errors": {
+    "invalidUrl": "Please enter a valid HTTP or HTTPS address",
+    "scanFailed": "Scan failed, please try again later"
+  },
+  "app": {
+    "language": "Language"
+  }
+}

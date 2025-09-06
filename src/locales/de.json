@@ -1,0 +1,32 @@
+{
+  "app": {
+    "title": "Website-Sicherheitsscanner",
+    "subtitle": "KI-gestützte Website-Sicherheitserkennungsplattform",
+    "language": "Sprache",
+    "startScan": "Scan starten",
+    "scanning": "Scannen...",
+    "home": "Startseite",
+    "history": "Verlauf",
+    "settings": "Einstellungen"
+  },
+  "home": {
+    "inputPlaceholder": "Website-URL zum Scannen eingeben (z.B. https://example.com)",
+    "scanOptions": "Scan-Optionen",
+    "sslCheck": "SSL/TLS-Sicherheitsprüfung",
+    "headersCheck": "HTTP-Sicherheitsheader-Prüfung",
+    "portsCheck": "Port-Scanning",
+    "vulnerabilitiesCheck": "Häufige Schwachstellenprüfung",
+    "howToUse": "So wird's gemacht",
+    "step1": "Website-URL eingeben",
+    "step1Desc": "Geben Sie die zu scannende Website-Adresse in das obige Eingabefeld ein",
+    "step2": "Scan-Items auswählen",
+    "step2Desc": "Wählen Sie die benötigten Sicherheits-Scan-Items aus",
+    "step3": "Scan starten",
+    "step3Desc": "Klicken Sie auf die Schaltfläche \"Scan starten\" und warten Sie auf die Ergebnisse",
+    "recentScans": "Letzte Scans"
+  },
+  "errors": {
+    "invalidUrl": "Bitte geben Sie eine gültige URL ein",
+    "scanFailed": "Scan fehlgeschlagen. Bitte versuchen Sie es später erneut"
+  }
+}

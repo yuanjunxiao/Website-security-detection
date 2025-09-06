@@ -1,0 +1,32 @@
+{
+  "app": {
+    "title": "ウェブサイトセキュリティスキャナー",
+    "subtitle": "AIを活用したウェブサイトセキュリティ検出プラットフォーム",
+    "language": "言語",
+    "startScan": "スキャン開始",
+    "scanning": "スキャン中...",
+    "home": "ホーム",
+    "history": "履歴",
+    "settings": "設定"
+  },
+  "home": {
+    "inputPlaceholder": "スキャンするウェブサイトURLを入力（例：https://example.com）",
+    "scanOptions": "スキャンオプション",
+    "sslCheck": "SSL/TLSセキュリティチェック",
+    "headersCheck": "HTTPセキュリティヘッダーチェック",
+    "portsCheck": "ポートスキャン",
+    "vulnerabilitiesCheck": "一般的な脆弱性チェック",
+    "howToUse": "使い方",
+    "step1": "ウェブサイトURLを入力",
+    "step1Desc": "上記の入力欄にスキャンしたいウェブサイトアドレスを入力",
+    "step2": "スキャン項目を選択",
+    "step2Desc": "必要なセキュリティスキャン項目を選択",
+    "step3": "スキャン開始",
+    "step3Desc": "「スキャン開始」ボタンをクリックし、結果を待つ",
+    "recentScans": "最近のスキャン"
+  },
+  "errors": {
+    "invalidUrl": "有効なURLを入力してください",
+    "scanFailed": "スキャンに失敗しました。後でもう一度お試しください"
+  }
+}

@@ -1,0 +1,91 @@
+{
+  "app": {
+    "title": "网站安全扫描器",
+    "subtitle": "快速检测网站安全漏洞，保护您的网站安全",
+    "scan": "扫描",
+    "scanning": "扫描中...",
+    "startScan": "开始检测",
+    "back": "返回",
+    "download": "下载",
+    "rescan": "重新扫描",
+    "settings": "设置",
+    "help": "帮助",
+    "about": "关于",
+    "history": "历史记录"
+  },
+  "home": {
+    "inputPlaceholder": "请输入要检测的网站URL (例如: https://example.com)",
+    "scanOptions": "检测选项",
+    "sslCheck": "SSL/TLS 安全检测",
+    "headers极速检测": "HTTP 安全头检测",
+    "portsCheck": "端口扫描",
+    "vulnerabilitiesCheck": "常见漏洞检测",
+    "howToUse": "如何使用",
+    "step1": "输入网站URL",
+    "step1Desc": "在上方输入框中输入要检测的网站地址",
+    "step2": "选择检测项目",
+    "step2Desc": "根据需要选择要进行的安全检测项目",
+    "step3": "开始检测",
+    "step3Desc": "点击\"开始检测\"按钮，等待检测结果",
+    "recentScans": "最近检测"
+  },
+  "scanResult": {
+    "title": "安全扫描报告",
+    "scanTime": "扫描时间",
+    "overallScore": "总体评分",
+    "securityStatus": "安全状况",
+    "sslSecurity": "SSL/TLS 安全",
+    "httpHeaders": "HTTP 安全头",
+    "vulnerabilityDetection": "漏洞检测",
+    "portScan": "端口扫描",
+    "recommendations": "安全建议",
+    "sslRecommendation": "建议更新SSL证书，启用HSTS，禁用不安全的协议版本",
+    "headersRecommendation": "添加Content-Security-Policy、X-Frame-Options等安全头",
+    "regularCheckRecommendation": "建议每月进行一次全面的安全扫描，及时发现潜在风险"
+  },
+  "history": {
+    "title": "扫描历史",
+    "description": "管理和查看您的网站安全扫描记录",
+    "searchPlaceholder": "搜索URL...",
+    "totalScans": "总扫描次数",
+    "successfulScans": "成功扫描",
+    "failedScans": "失败扫描",
+    "averageScore": "平均评分",
+    "allStatus": "所有状态",
+    "completed": "已完成",
+    "failed": "失败",
+    "sortByTime": "按时间排序",
+    "sortByScore": "按评分排序",
+    "sortByUrl": "按URL排序",
+    "export": "导出",
+    "deleteSelected": "删除选中",
+    "clearAll": "清空全部",
+    "noRecords": "暂无扫描记录",
+    "startScanPrompt": "开始您的第一次安全扫描吧！",
+    "startScan": "开始扫描",
+    "url": "网站URL",
+    "scanTime": "扫描时间",
+    "status": "状态",
+    "score": "评分",
+    "duration": "耗时",
+    "actions": "操作",
+    "view": "查看",
+    "delete": "删除"
+  },
+  "status": {
+    "excellent": "优秀",
+    "good": "良好",
+    "warning": "警告",
+    "danger": "危险",
+    "completed": "已完成",
+    "failed": "失败",
+    "scanning": "扫描中"
+  },
+  "errors": {
+    "invalidUrl": "请输入有效的HTTP或HTTPS地址",
+    "scanFailed": "扫描失败，请稍后重试"
+  },
+  "app": {
+    "language": "语言"
+  }
+}

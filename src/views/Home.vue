@@ -2,8 +2,8 @@
   <div class="home-container">
     <!-- 头部标题区域 -->
     <div class="header-section">
-      <h1 class="main-title">网站安全扫描器</h1>
-      <p class="subtitle">快速检测网站安全漏洞，保护您的网站安全</p>
+      <h1 class="main-title">{{ t('app.title') }}</h1>
+      <p class="subtitle">{{ t('app.subtitle') }}</p>
     </div>
 
     <!-- 检测输入区域 -->
@@ -13,24 +13,20 @@
           <input
             v-model="targetUrl"
             type="url"
-            placeholder="请输入要检测的网站URL (例如: https://example.com)"
+            :placeholder="t('home.inputPlaceholder')"
             class="url-input"
             :disabled="isScanning"
             @keyup.enter="startScan"
           />
-          <button
-            @click="startScan"
-            :disabled="!isValidUrl || isScanning"
-            class="scan-button"
-          >
-            <span v-if="!isScanning">开始检测</span>
+          <button @click="startScan" :disabled="!isValidUrl || isScanning" class="scan-button">
+            <span v-if="!isScanning">{{ t('app.startScan') }}</span>
             <span v-else class="scanning-text">
               <i class="loading-icon"></i>
-              检测中...
+              {{ t('app.scanning') }}
             </span>
           </button>
         </div>
-        
+
         <!-- URL验证提示 -->
         <div v-if="urlError" class="error-message">
           {{ urlError }}
@@ -39,43 +35,27 @@
 
       <!-- 检测选项 -->
       <div class="scan-options">
-        <h3>检测选项</h3>
+        <h3>{{ t('home.scanOptions') }}</h3>
         <div class="options-grid">
           <label class="option-item">
-            <input
-              type="checkbox"
-              v-model="scanOptions.ssl"
-              :disabled="isScanning"
-            />
+            <input type="checkbox" v-model="scanOptions.ssl" :disabled="isScanning" />
             <span class="checkmark"></span>
-            SSL/TLS 安全检测
+            {{ t('home.sslCheck') }}
           </label>
           <label class="option-item">
-            <input
-              type="checkbox"
-              v-model="scanOptions.headers"
-              :disabled="isScanning"
-            />
+            <input type="checkbox" v-model="scanOptions.headers" :disabled="isScanning" />
             <span class="checkmark"></span>
-            HTTP 安全头检测
+            {{ t('home.headersCheck') }}
           </label>
           <label class="option-item">
-            <input
-              type="checkbox"
-              v-model="scanOptions.ports"
-              :disabled="isScanning"
-            />
+            <input type="checkbox" v-model="scanOptions.ports" :disabled="isScanning" />
             <span class="checkmark"></span>
-            端口扫描
+            {{ t('home.portsCheck') }}
           </label>
           <label class="option-item">
-            <input
-              type="checkbox"
-              v-model="scanOptions.vulnerabilities"
-              :disabled="isScanning"
-            />
+            <input type="checkbox" v-model="scanOptions.vulnerabilities" :disabled="isScanning" />
             <span class="checkmark"></span>
-            常见漏洞检测
+            {{ t('home.vulnerabilitiesCheck') }}
           </label>
         </div>
       </div>
@@ -93,27 +73,27 @@
 
     <!-- 快速开始指南 -->
     <div v-if="!hasScanned && !isScanning" class="guide-section">
-      <h3>如何使用</h3>
+      <h3>{{ t('home.howToUse') }}</h3>
       <div class="guide-steps">
         <div class="step">
           <div class="step-number">1</div>
           <div class="step-content">
-            <h4>输入网站URL</h4>
-            <p>在上方输入框中输入要检测的网站地址</p>
+            <h4>{{ t('home.step1') }}</h4>
+            <p>{{ t('home.step1Desc') }}</p>
           </div>
         </div>
         <div class="step">
           <div class="step-number">2</div>
           <div class="step-content">
-            <h4>选择检测项目</h4>
-            <p>根据需要选择要进行的安全检测项目</p>
+            <h4>{{ t('home.step2') }}</h4>
+            <p>{{ t('home.step2Desc') }}</p>
           </div>
         </div>
         <div class="step">
           <div class="step-number">3</div>
           <div class="step-content">
-            <h4>开始检测</h4>
-            <p>点击"开始检测"按钮，等待检测结果</p>
+            <h4>{{ t('home.step3') }}</h4>
+            <p>{{ t('home.step3Desc') }}</p>
           </div>
         </div>
       </div>
@@ -121,7 +101,7 @@
 
     <!-- 最近检测记录 -->
     <div v-if="recentScans.length > 0" class="recent-scans">
-      <h3>最近检测</h3>
+      <h3>{{ t('home.recentScans') }}</h3>
       <div class="scan-history">
         <div
           v-for="scan in recentScans"
@@ -140,9 +120,29 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
+import { useI18n } from 'vue-i18n'
+import type { RouteParamValueRaw } from 'vue-router'
+
+interface ScanRecord {
+  id: number
+  url: string
+  timestamp: Date
+  status: 'completed' | 'failed' | 'scanning'
+  options: {
+    ssl: boolean
+    headers: boolean
+    ports: boolean
+    vulnerabilities: boolean
+  }
+}
+
 export default {
-  name: 'Home',
+  name: 'HomePage',
+  setup() {
+    const { t } = useI18n()
+    return { t }
+  },
   data() {
     return {
       targetUrl: '',
@@ -155,9 +155,9 @@ export default {
         ssl: true,
         headers: true,
         ports: false,
-        vulnerabilities: true
+        vulnerabilities: true,
       },
-      recentScans: []
+      recentScans: [] as ScanRecord[],
     }
   },
   computed: {
@@ -169,28 +169,28 @@ export default {
       } catch {
         return false
       }
-    }
+    },
   },
   watch: {
     targetUrl(newVal) {
       this.validateUrl(newVal)
-    }
+    },
   },
   mounted() {
     this.loadRecentScans()
   },
   methods: {
-    validateUrl(url) {
+    validateUrl(url: string) {
       this.urlError = ''
       if (!url) return
 
       try {
         const urlObj = new URL(url)
         if (urlObj.protocol !== 'http:' && urlObj.protocol !== 'https:') {
-          this.urlError = '请输入有效的HTTP或HTTPS地址'
+          this.urlError = this.t('errors.invalidUrl')
         }
       } catch {
-        this.urlError = '请输入有效的URL地址'
+        this.urlError = this.t('errors.invalidUrl')
       }
     },
 
@@ -204,39 +204,40 @@ export default {
       try {
         // 模拟扫描过程
         await this.simulateScan()
-        
+
         // 保存扫描记录
         this.saveScanRecord()
-        
+
         // 跳转到结果页面
         this.$router.push({
           name: 'ScanResult',
           params: {
             url: this.targetUrl,
-            options: this.scanOptions
-          }
+            options: JSON.stringify(this.scanOptions),
+          },
         })
       } catch (error) {
         console.error('扫描失败:', error)
-        this.urlError = '扫描失败，请稍后重试'
+        this.urlError = this.t('errors.scanFailed')
       } finally {
         this.isScanning = false
       }
     },
 
     async simulateScan() {
+      // 扫描状态消息可以根据需要添加国际化
       const steps = [
-        '正在连接目标网站...',
-        '检测SSL/TLS配置...',
-        '分析HTTP安全头...',
-        '扫描常见漏洞...',
-        '生成检测报告...'
+        this.t('app.scanning'),
+        this.t('app.scanning'),
+        this.t('app.scanning'),
+        this.t('app.scanning'),
+        this.t('app.scanning'),
       ]
 
       for (let i = 0; i < steps.length; i++) {
         this.scanStatus = steps[i]
         this.scanProgress = ((i + 1) / steps.length) * 100
-        await new Promise(resolve => setTimeout(resolve, 1000))
+        await new Promise((resolve) => setTimeout(resolve, 1000))
       }
     },
 
@@ -245,15 +246,15 @@ export default {
         id: Date.now(),
         url: this.targetUrl,
         timestamp: new Date(),
-        status: 'completed',
-        options: { ...this.scanOptions }
+        status: 'completed' as const,
+        options: { ...this.scanOptions },
       }
-      
-      this.recentScans.unshift(scan)
+
+      this.recentScans.unshift(scan as ScanRecord)
       if (this.recentScans.length > 5) {
         this.recentScans.pop()
       }
-      
+
       // 保存到本地存储
       localStorage.setItem('recentScans', JSON.stringify(this.recentScans))
     },
@@ -261,41 +262,41 @@ export default {
     loadRecentScans() {
       const saved = localStorage.getItem('recentScans')
       if (saved) {
-        this.recentScans = JSON.parse(saved).map(scan => ({
+        this.recentScans = JSON.parse(saved).map((scan: any) => ({
           ...scan,
-          timestamp: new Date(scan.timestamp)
+          timestamp: new Date(scan.timestamp),
         }))
       }
     },
 
-    loadScanResult(scan) {
+    loadScanResult(scan: ScanRecord) {
       this.$router.push({
         name: 'ScanResult',
         params: {
           url: scan.url,
-          options: scan.options
-        }
+          options: JSON.stringify(scan.options),
+        },
       })
     },
 
-    formatTime(timestamp) {
+    formatTime(timestamp: Date) {
       return timestamp.toLocaleString('zh-CN', {
         month: 'short',
         day: 'numeric',
         hour: '2-digit',
-        minute: '2-digit'
+        minute: '2-digit',
       })
     },
 
-    getStatusText(status) {
+    getStatusText(status: 'completed' | 'failed' | 'scanning') {
       const statusMap = {
         completed: '已完成',
         failed: '失败',
-        scanning: '扫描中'
+        scanning: '扫描中',
       }
       return statusMap[status] || status
-    }
-  }
+    },
+  },
 }
 </script>
 
@@ -401,7 +402,9 @@ export default {
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .error-message {
@@ -434,7 +437,7 @@ export default {
   background-color: #f8f9fa;
 }
 
-.option-item input[type="checkbox"] {
+.option-item input[type='checkbox'] {
   display: none;
 }
 
@@ -448,12 +451,12 @@ export default {
   transition: all 0.3s ease;
 }
 
-.option-item input[type="checkbox"]:checked + .checkmark {
+.option-item input[type='checkbox']:checked + .checkmark {
   background-color: #3498db;
   border-color: #3498db;
 }
 
-.option-item input[type="checkbox"]:checked + .checkmark::after {
+.option-item input[type='checkbox']:checked + .checkmark::after {
   content: '';
   position: absolute;
   left: 6px;
@@ -617,25 +620,25 @@ export default {
   .home-container {
     padding: 1rem;
   }
-  
+
   .input-group {
     flex-direction: column;
   }
-  
+
   .options-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .guide-steps {
     gap: 1rem;
   }
-  
+
   .history-item {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.5rem;
   }
-  
+
   .history-time {
     margin-right: 0;
   }

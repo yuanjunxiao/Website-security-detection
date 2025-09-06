@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import LanguageSwitcher from './LanguageSwitcher.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -48,6 +49,7 @@ const isActive = (path: string) => {
         >
           {{ item.name }}
         </button>
+        <LanguageSwitcher />
       </div>
 
       <!-- Mobile Menu Button -->
