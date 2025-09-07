@@ -1,10 +1,23 @@
 <script setup lang="ts">
 import { RouterView } from 'vue-router'
 import AppNavigation from './components/AppNavigation.vue'
+import GoogleSignInButton from './components/GoogleSignInButton.vue'
+import { onMounted } from 'vue'
+import { initGoogleAuth } from './api/googleAuthService'
+
+onMounted(() => {
+  // 初始化 Google OAuth 检查
+  initGoogleAuth()
+})
 </script>
 
 <template>
   <div id="app">
+    <!-- 右上角登录区域 -->
+    <div class="auth-corner">
+      <GoogleSignInButton />
+    </div>
+
     <AppNavigation />
     <main class="main-content">
       <RouterView />
@@ -32,7 +45,9 @@ body {
   width: 100%;
   height: 100%;
   line-height: 1.6;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell',
+    sans-serif;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
   background-attachment: fixed;
   background-size: cover;
@@ -94,5 +109,31 @@ body {
 .main-content > * {
   position: relative;
   z-index: 1;
+}
+
+/* 右上角登录区域 */
+.auth-corner {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .auth-corner {
+    top: 15px;
+    right: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .auth-corner {
+    top: 10px;
+    right: 10px;
+  }
 }
 </style>
