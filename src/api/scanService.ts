@@ -60,6 +60,8 @@ export const createScanTask = async (url: string): Promise<ScanTask> => {
       throw new Error('无效的URL地址')
     } else if (err.response?.status === 429) {
       throw new Error('请求过于频繁，请稍后再试')
+    } else if (err.code === 'ERR_NETWORK' || err.message?.includes('CORS') || err.message?.includes('cross-origin')) {
+      throw new Error('跨域访问被阻止，请联系管理员检查后端CORS配置')
     } else {
       throw new Error(`创建扫描任务失败: ${err.message}`)
     }
@@ -78,7 +80,11 @@ export const getScanTaskStatus = async (taskId: string): Promise<ScanTask> => {
     }
   } catch (error: unknown) {
     const err = error as AxiosError
-    throw new Error(`获取扫描状态失败: ${err.message}`)
+    if (err.code === 'ERR_NETWORK' || err.message?.includes('CORS') || err.message?.includes('cross-origin')) {
+      throw new Error('跨域访问被阻止，请联系管理员检查后端CORS配置')
+    } else {
+      throw new Error(`获取扫描状态失败: ${err.message}`)
+    }
   }
 }
 
