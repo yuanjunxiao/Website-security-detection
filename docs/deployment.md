@@ -3,6 +3,7 @@
 ## 1. 部署概览
 
 本项目采用前后端分离架构：
+
 - **前端**: 部署在 Netlify
 - **后端**: 部署在 Railway
 - **安全检测**: 集成腾讯云安全SDK
@@ -12,15 +13,19 @@
 ### 2.1 准备工作
 
 #### 2.1.1 环境变量配置
+
 在项目根目录创建 `.env` 文件：
+
 ```env
-VITE_API_BASE_URL=https://your-backend.railway.app
+VITE_API_BASE_URL=https://website-security-back-production.up.railway.app
 VITE_APP_NAME=网址安全检测平台
 VITE_APP_VERSION=1.0.0
 ```
 
 #### 2.1.2 构建配置
+
 确保 `package.json` 中包含正确的构建脚本：
+
 ```json
 {
   "scripts": {
@@ -41,6 +46,7 @@ VITE_APP_VERSION=1.0.0
    - 选择项目仓库
 
 2. **配置构建设置**
+
    ```
    Build command: npm run build
    Publish directory: dist
@@ -49,13 +55,15 @@ VITE_APP_VERSION=1.0.0
 3. **设置环境变量**
    - 进入 Site settings > Environment variables
    - 添加以下变量：
+
      ```
-     VITE_API_BASE_URL = https://your-backend.railway.app
+     VITE_API_BASE_URL = https://website-security-back-production.up.railway.app
      VITE_APP_NAME = 网址安全检测平台
      ```
 
 4. **部署配置**
    在项目根目录创建 `netlify.toml`：
+
    ```toml
    [build]
      publish = "dist"
@@ -81,6 +89,7 @@ VITE_APP_VERSION=1.0.0
 #### 2.2.2 手动部署
 
 1. **本地构建**
+
    ```bash
    npm install
    npm run build
@@ -89,6 +98,7 @@ VITE_APP_VERSION=1.0.0
 2. **上传到Netlify**
    - 将 `dist` 文件夹拖拽到 Netlify 部署页面
    - 或使用 Netlify CLI：
+
      ```bash
      npm install -g netlify-cli
      netlify deploy --prod --dir=dist
@@ -103,9 +113,11 @@ VITE_APP_VERSION=1.0.0
 
 2. **DNS配置**
    - 在域名提供商处添加CNAME记录：
+
      ```
      www.security-scanner.com -> your-site.netlify.app
      ```
+
    - 或添加A记录指向Netlify IP
 
 3. **SSL证书**
@@ -117,6 +129,7 @@ VITE_APP_VERSION=1.0.0
 ### 3.1 准备工作
 
 #### 3.1.1 创建后端项目结构
+
 ```
 backend/
 ├── src/
@@ -137,6 +150,7 @@ backend/
 ```
 
 #### 3.1.2 创建 package.json
+
 ```json
 {
   "name": "security-scanner-backend",
@@ -167,6 +181,7 @@ backend/
 ```
 
 #### 3.1.3 创建主服务文件 server.js
+
 ```javascript
 const express = require('express')
 const cors = require('cors')
@@ -181,16 +196,18 @@ const PORT = process.env.PORT || 3000
 
 // 安全中间件
 app.use(helmet())
-app.use(cors({
-  origin: process.env.FRONTEND_URL || 'https://your-frontend.netlify.app',
-  credentials: true
-}))
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL || 'https://your-frontend.netlify.app',
+    credentials: true,
+  }),
+)
 
 // 限流中间件
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15分钟
   max: 100, // 限制每个IP 15分钟内最多100个请求
-  message: '请求过于频繁，请稍后再试'
+  message: '请求过于频繁，请稍后再试',
 })
 app.use(limiter)
 
@@ -207,8 +224,8 @@ app.get('/api/health', (req, res) => {
     data: {
       status: 'healthy',
       version: '1.0.0',
-      timestamp: new Date().toISOString()
-    }
+      timestamp: new Date().toISOString(),
+    },
   })
 })
 
@@ -218,8 +235,8 @@ app.use('*', (req, res) => {
     success: false,
     error: {
       code: 'NOT_FOUND',
-      message: '接口不存在'
-    }
+      message: '接口不存在',
+    },
   })
 })
 
@@ -230,8 +247,8 @@ app.use((err, req, res, next) => {
     success: false,
     error: {
       code: 'INTERNAL_ERROR',
-      message: '服务器内部错误'
-    }
+      message: '服务器内部错误',
+    },
   })
 })
 
@@ -252,6 +269,7 @@ app.listen(PORT, () => {
 
 2. **配置环境变量**
    在Railway项目设置中添加：
+
    ```
    TENCENT_SECRET_ID=your_secret_id
    TENCENT_SECRET_KEY=your_secret_key
@@ -262,6 +280,7 @@ app.listen(PORT, () => {
 
 3. **配置构建设置**
    创建 `railway.json`：
+
    ```json
    {
      "$schema": "https://railway.app/railway.schema.json",
@@ -281,11 +300,13 @@ app.listen(PORT, () => {
 #### 3.2.2 CLI部署
 
 1. **安装Railway CLI**
+
    ```bash
    npm install -g @railway/cli
    ```
 
 2. **登录并部署**
+
    ```bash
    railway login
    railway init
@@ -301,6 +322,7 @@ app.listen(PORT, () => {
 
 2. **DNS配置**
    - 添加CNAME记录：
+
      ```
      api.security-scanner.com -> your-project.railway.app
      ```
@@ -331,8 +353,9 @@ app.listen(PORT, () => {
 ### 4.3 SDK集成示例
 
 创建 `src/services/tencentSecurity.js`：
+
 ```javascript
-const tencentcloud = require("tencentcloud-sdk-nodejs")
+const tencentcloud = require('tencentcloud-sdk-nodejs')
 
 class TencentSecurityService {
   constructor() {
@@ -343,10 +366,10 @@ class TencentSecurityService {
         secretId: process.env.TENCENT_SECRET_ID,
         secretKey: process.env.TENCENT_SECRET_KEY,
       },
-      region: process.env.TENCENT_REGION || "ap-beijing",
+      region: process.env.TENCENT_REGION || 'ap-beijing',
       profile: {
         httpProfile: {
-          endpoint: "tms.tencentcloudapi.com",
+          endpoint: 'tms.tencentcloudapi.com',
         },
       },
     }
@@ -358,12 +381,12 @@ class TencentSecurityService {
     try {
       const params = {
         Content: url,
-        BizType: "website_security",
+        BizType: 'website_security',
         DataId: this.generateDataId(),
         User: {
-          UserId: "anonymous",
-          AccountType: "1"
-        }
+          UserId: 'anonymous',
+          AccountType: '1',
+        },
       }
 
       const result = await this.client.TextModeration(params)
@@ -398,11 +421,11 @@ class TencentSecurityService {
       details: {
         suggestion,
         label,
-        score
+        score,
       },
       recommendations: this.generateRecommendations(safetyLevel),
       scanId: this.generateScanId(),
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     }
   }
 
@@ -418,7 +441,7 @@ class TencentSecurityService {
     const recommendations = {
       safe: ['网站安全性良好，可以正常访问'],
       suspicious: ['建议谨慎访问此网站', '请注意保护个人信息'],
-      dangerous: ['强烈建议不要访问此网站', '该网站存在安全风险', '请勿在此网站输入个人信息']
+      dangerous: ['强烈建议不要访问此网站', '该网站存在安全风险', '请勿在此网站输入个人信息'],
     }
     return recommendations[safetyLevel] || []
   }
@@ -432,6 +455,7 @@ module.exports = TencentSecurityService
 ### 5.1 前端环境变量
 
 #### 开发环境 (.env.development)
+
 ```env
 VITE_API_BASE_URL=http://localhost:3000
 VITE_APP_NAME=网址安全检测平台(开发)
@@ -439,8 +463,9 @@ VITE_APP_VERSION=1.0.0-dev
 ```
 
 #### 生产环境 (.env.production)
+
 ```env
-VITE_API_BASE_URL=https://your-backend.railway.app
+VITE_API_BASE_URL=https://website-security-back-production.up.railway.app
 VITE_APP_NAME=网址安全检测平台
 VITE_APP_VERSION=1.0.0
 ```
@@ -448,6 +473,7 @@ VITE_APP_VERSION=1.0.0
 ### 5.2 后端环境变量
 
 #### 开发环境 (.env.development)
+
 ```env
 NODE_ENV=development
 PORT=3000
@@ -458,6 +484,7 @@ FRONTEND_URL=http://localhost:5173
 ```
 
 #### 生产环境 (Railway配置)
+
 ```env
 NODE_ENV=production
 TENCENT_SECRET_ID=your_prod_secret_id
@@ -471,40 +498,41 @@ FRONTEND_URL=https://your-frontend.netlify.app
 ### 6.1 GitHub Actions
 
 创建 `.github/workflows/deploy.yml`：
+
 ```yaml
 name: Deploy to Production
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   deploy-frontend:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '20'
           cache: 'npm'
-      
+
       - name: Install dependencies
         run: npm ci
-      
+
       - name: Build
         run: npm run build
         env:
           VITE_API_BASE_URL: ${{ secrets.API_BASE_URL }}
-      
+
       - name: Deploy to Netlify
         uses: nwtgck/actions-netlify@v2.0
         with:
           publish-dir: './dist'
           production-branch: main
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          deploy-message: "Deploy from GitHub Actions"
+          deploy-message: 'Deploy from GitHub Actions'
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
@@ -513,7 +541,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Deploy to Railway
         uses: bervProject/railway-deploy@v1.2.0
         with:
@@ -526,17 +554,20 @@ jobs:
 ### 7.1 前端监控
 
 #### Netlify Analytics
+
 - 在Netlify控制台启用Analytics
 - 监控页面访问量和性能
 
 #### 错误监控
+
 集成Sentry进行错误监控：
+
 ```javascript
-import * as Sentry from "@sentry/vue"
+import * as Sentry from '@sentry/vue'
 
 Sentry.init({
   app,
-  dsn: "YOUR_SENTRY_DSN",
+  dsn: 'YOUR_SENTRY_DSN',
   environment: import.meta.env.MODE,
 })
 ```
@@ -544,10 +575,12 @@ Sentry.init({
 ### 7.2 后端监控
 
 #### Railway监控
+
 - Railway提供内置的CPU、内存监控
 - 查看部署日志和错误信息
 
 #### 日志管理
+
 ```javascript
 const winston = require('winston')
 
@@ -557,8 +590,8 @@ const logger = winston.createLogger({
   transports: [
     new winston.transports.Console(),
     new winston.transports.File({ filename: 'error.log', level: 'error' }),
-    new winston.transports.File({ filename: 'combined.log' })
-  ]
+    new winston.transports.File({ filename: 'combined.log' }),
+  ],
 })
 
 module.exports = logger
@@ -569,6 +602,7 @@ module.exports = logger
 ### 8.1 常见问题
 
 #### 前端部署问题
+
 1. **构建失败**
    - 检查Node.js版本
    - 确认依赖安装完整
@@ -579,6 +613,7 @@ module.exports = logger
    - 检查`netlify.toml`配置
 
 #### 后端部署问题
+
 1. **服务启动失败**
    - 检查端口配置
    - 确认环境变量设置
@@ -592,11 +627,13 @@ module.exports = logger
 ### 8.2 性能优化
 
 #### 前端优化
+
 - 启用Gzip压缩
 - 配置CDN缓存
 - 优化图片资源
 
 #### 后端优化
+
 - 实现响应缓存
 - 优化数据库查询
 - 配置负载均衡
@@ -604,17 +641,20 @@ module.exports = logger
 ## 9. 安全配置
 
 ### 9.1 HTTPS配置
+
 - 前端和后端都必须使用HTTPS
 - 配置HSTS头部
 - 使用安全的Cookie设置
 
 ### 9.2 API安全
+
 - 实现请求限流
 - 添加输入验证
 - 配置CORS策略
 - 使用安全头部
 
 ### 9.3 密钥管理
+
 - 使用环境变量存储敏感信息
 - 定期轮换API密钥
 - 限制密钥权限范围
@@ -622,16 +662,19 @@ module.exports = logger
 ## 10. 备份和恢复
 
 ### 10.1 代码备份
+
 - 使用Git版本控制
 - 定期推送到远程仓库
 - 创建发布标签
 
 ### 10.2 配置备份
+
 - 导出环境变量配置
 - 备份部署配置文件
 - 记录域名和DNS设置
 
 ### 10.3 恢复流程
+
 1. 从Git仓库恢复代码
 2. 重新配置环境变量
 3. 重新部署应用
