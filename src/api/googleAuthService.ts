@@ -6,7 +6,7 @@ const API_BASE_URL =
 // 获取 Google OAuth 授权 URL
 export const getGoogleAuthUrl = async (): Promise<string> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/auth/google`)
+    const response = await fetch(`${API_BASE_URL}/api/auth/google`)
     if (!response.ok) {
       throw new Error('Failed to get auth URL')
     }
@@ -27,7 +27,7 @@ export const handleAuthCallback = async (code: string): Promise<void> => {
   try {
     // 发送授权码到后端
     const response = await fetch(
-      `${API_BASE_URL}/auth/google/callback?code=${encodeURIComponent(code)}`,
+      `${API_BASE_URL}/api/auth/google/callback?code=${encodeURIComponent(code)}`,
     )
 
     if (!response.ok) {
@@ -38,7 +38,7 @@ export const handleAuthCallback = async (code: string): Promise<void> => {
 
     if (result.status === 'success') {
       // 获取用户信息
-      const userResponse = await fetch(`${API_BASE_URL}/auth/me`, {
+      const userResponse = await fetch(`${API_BASE_URL}/api/auth/me`, {
         headers: {
           Authorization: `Bearer ${result.data.accessToken}`,
         },
@@ -95,7 +95,7 @@ export const signOut = async (): Promise<void> => {
 
   try {
     if (accessToken) {
-      await fetch(`${API_BASE_URL}/auth/logout`, {
+      await fetch(`${API_BASE_URL}/api/auth/logout`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -122,7 +122,7 @@ export const checkAuthStatus = async (): Promise<boolean> => {
   }
 
   try {
-    const response = await fetch(`${API_BASE_URL}/auth/me`, {
+    const response = await fetch(`${API_BASE_URL}/api/auth/me`, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
@@ -151,7 +151,7 @@ export const refreshAccessToken = async (): Promise<string | null> => {
   }
 
   try {
-    const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
+    const response = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
