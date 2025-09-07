@@ -1,6 +1,7 @@
 import { useUserStore } from '../stores/userStore'
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://website-security-back-production.up.railway.app/api'
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || 'https://website-security-back-production.up.railway.app'
 
 // 获取 Google OAuth 授权 URL
 export const getGoogleAuthUrl = async (): Promise<string> => {

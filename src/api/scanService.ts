@@ -32,21 +32,21 @@ export interface ApiResponse<T = any> {
   message?: string
 }
 
-const API_BASE_URL = 'https://website-security-back-production.up.railway.app/api'
+const API_BASE_URL = 'https://website-security-back-production.up.railway.app'
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
   timeout: 30000,
   headers: {
-    'Content-Type': 'application/json'
-  }
+    'Content-Type': 'application/json',
+  },
 })
 
 // 创建扫描任务
 export const createScanTask = async (url: string): Promise<ScanTask> => {
   try {
     const response = await apiClient.post<ApiResponse<ScanTask>>('/scan', {
-      url: url
+      url: url,
     })
 
     if (response.data.status === 'success') {
@@ -88,7 +88,7 @@ export const pollScanTask = async (
   onProgress?: (task: ScanTask) => void,
   maxAttempts: number = 60, // 最大尝试次数（约3-5分钟）
   initialDelay: number = 1000, // 初始延迟1秒
-  maxDelay: number = 4000 // 最大延迟4秒
+  maxDelay: number = 4000, // 最大延迟4秒
 ): Promise<ScanTask> => {
   let attempts = 0
   let delay = initialDelay
@@ -112,15 +112,14 @@ export const pollScanTask = async (
         delay = initialDelay // pending状态保持较短延迟
       }
 
-      await new Promise(resolve => setTimeout(resolve, delay))
+      await new Promise((resolve) => setTimeout(resolve, delay))
       attempts++
-
     } catch (error) {
       attempts++
       if (attempts >= maxAttempts) {
         throw error
       }
-      await new Promise(resolve => setTimeout(resolve, delay))
+      await new Promise((resolve) => setTimeout(resolve, delay))
     }
   }
 
