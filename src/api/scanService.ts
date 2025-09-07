@@ -32,7 +32,7 @@ export interface ApiResponse<T = any> {
   message?: string
 }
 
-const API_BASE_URL = 'https://website-security-back-production.up.railway.app'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://website-security-back-production.up.railway.app'
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
