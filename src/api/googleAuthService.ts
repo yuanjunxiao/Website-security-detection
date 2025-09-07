@@ -1,6 +1,6 @@
 import { useUserStore } from '../stores/userStore'
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://website-security-back-production.up.railway.app/api'
 
 // 获取 Google OAuth 授权 URL
 export const getGoogleAuthUrl = async (): Promise<string> => {
@@ -25,7 +25,9 @@ export const handleAuthCallback = async (code: string): Promise<void> => {
 
   try {
     // 发送授权码到后端
-    const response = await fetch(`${API_BASE_URL}/auth/google/callback?code=${encodeURIComponent(code)}`)
+    const response = await fetch(
+      `${API_BASE_URL}/auth/google/callback?code=${encodeURIComponent(code)}`,
+    )
 
     if (!response.ok) {
       throw new Error('Authentication failed')
@@ -37,8 +39,8 @@ export const handleAuthCallback = async (code: string): Promise<void> => {
       // 获取用户信息
       const userResponse = await fetch(`${API_BASE_URL}/auth/me`, {
         headers: {
-          'Authorization': `Bearer ${result.data.accessToken}`
-        }
+          Authorization: `Bearer ${result.data.accessToken}`,
+        },
       })
 
       if (userResponse.ok) {
@@ -95,8 +97,8 @@ export const signOut = async (): Promise<void> => {
       await fetch(`${API_BASE_URL}/auth/logout`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${accessToken}`
-        }
+          Authorization: `Bearer ${accessToken}`,
+        },
       })
     }
   } catch (error) {
@@ -121,8 +123,8 @@ export const checkAuthStatus = async (): Promise<boolean> => {
   try {
     const response = await fetch(`${API_BASE_URL}/auth/me`, {
       headers: {
-        'Authorization': `Bearer ${accessToken}`
-      }
+        Authorization: `Bearer ${accessToken}`,
+      },
     })
 
     if (response.ok) {
@@ -153,7 +155,7 @@ export const refreshAccessToken = async (): Promise<string | null> => {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ refresh_token: refreshToken })
+      body: JSON.stringify({ refresh_token: refreshToken }),
     })
 
     if (response.ok) {
