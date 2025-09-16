@@ -8,33 +8,33 @@ const features = [
   {
     icon: '🔒',
     title: 'SSL/TLS 检测',
-    description: '全面检查SSL证书有效性、加密强度和协议配置'
+    description: '全面检查SSL证书有效性、加密强度和协议配置',
   },
   {
     icon: '🛡️',
     title: 'HTTP 安全头',
-    description: '分析关键安全头配置，提供详细的安全建议'
+    description: '分析关键安全头配置，提供详细的安全建议',
   },
   {
     icon: '🔌',
     title: '端口扫描',
-    description: '检测开放端口，识别潜在的安全风险'
+    description: '检测开放端口，识别潜在的安全风险',
   },
   {
     icon: '🐛',
     title: '漏洞检测',
-    description: '扫描常见Web安全漏洞，如XSS、SQL注入等'
+    description: '扫描常见Web安全漏洞，如XSS、SQL注入等',
   },
   {
     icon: '📊',
     title: '详细报告',
-    description: '生成专业的安全评估报告，支持导出'
+    description: '生成专业的安全评估报告，支持导出',
   },
   {
     icon: '📱',
     title: '响应式设计',
-    description: '完美适配桌面和移动设备'
-  }
+    description: '完美适配桌面和移动设备',
+  },
 ]
 
 const teamMembers = [
@@ -42,20 +42,20 @@ const teamMembers = [
     name: 'CodeBuddy',
     role: '首席开发工程师',
     avatar: '👨‍💻',
-    description: '负责系统架构设计和核心功能开发'
+    description: '负责系统架构设计和核心功能开发',
   },
   {
     name: 'Security Expert',
     role: '安全专家',
     avatar: '🔐',
-    description: '提供安全检测算法和漏洞识别技术'
+    description: '提供安全检测算法和漏洞识别技术',
   },
   {
     name: 'UI Designer',
     role: 'UI/UX 设计师',
     avatar: '🎨',
-    description: '负责用户界面设计和用户体验优化'
-  }
+    description: '负责用户界面设计和用户体验优化',
+  },
 ]
 
 const techStack = [
@@ -63,11 +63,10 @@ const techStack = [
   { name: 'TypeScript', description: '类型安全的JavaScript' },
   { name: 'Pinia', description: '状态管理库' },
   { name: 'Vue Router', description: '路由管理' },
-  { name: 'Vite', description: '快速构建工具' }
+  { name: 'Vite', description: '快速构建工具' },
 ]
 
 const contactEmail = 'security@example.com'
-const githubUrl = 'https://github.com/example/website-security-scanner'
 const documentationUrl = '/help'
 </script>
 
@@ -163,14 +162,6 @@ const documentationUrl = '/help'
             </div>
           </a>
 
-          <a :href="githubUrl" target="_blank" class="contact-item">
-            <span class="contact-icon">🐙</span>
-            <div class="contact-info">
-              <div class="contact-title">GitHub</div>
-              <div class="contact-detail">查看源代码</div>
-            </div>
-          </a>
-
           <router-link :to="documentationUrl" class="contact-item">
             <span class="contact-icon">📚</span>
             <div class="contact-info">
@@ -186,18 +177,14 @@ const documentationUrl = '/help'
     <div class="disclaimer-section">
       <h2>⚠️ 免责声明</h2>
       <div class="disclaimer-content">
-        <p>
-          本工具仅用于合法的安全检测目的。使用本工具时，请确保：
-        </p>
+        <p>本工具仅用于合法的安全检测目的。使用本工具时，请确保：</p>
         <ul>
           <li>仅对您拥有或已获得授权的网站进行扫描</li>
           <li>遵守相关法律法规和网站的使用条款</li>
           <li>不将扫描结果用于恶意攻击或非法用途</li>
           <li>理解扫描结果仅供参考，不保证100%准确</li>
         </ul>
-        <p>
-          开发团队不对因使用本工具而产生的任何直接或间接损失承担责任。
-        </p>
+        <p>开发团队不对因使用本工具而产生的任何直接或间接损失承担责任。</p>
       </div>
     </div>
 

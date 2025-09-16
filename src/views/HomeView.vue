@@ -152,6 +152,18 @@ const startScan = async () => {
         </div>
       </div>
     </div>
+
+    <!-- 页脚链接 -->
+    <div class="footer-links">
+      <div class="footer-content">
+        <div class="footer-text">
+          使用本服务即表示您同意我们的
+          <router-link to="/terms-of-service" class="footer-link">服务条款</router-link>
+          和
+          <router-link to="/privacy-policy" class="footer-link">隐私权政策</router-link>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -487,6 +499,64 @@ const startScan = async () => {
   .options-grid {
     grid-template-columns: 1fr;
     gap: 1rem;
+  }
+}
+
+.footer-links {
+  margin-top: 6rem;
+  padding: 3rem 0 2rem;
+  text-align: center;
+}
+
+.footer-content {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+.footer-text {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.9rem;
+  font-weight: 400;
+  line-height: 1.6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.footer-link {
+  color: rgba(255, 255, 255, 0.95);
+  text-decoration: underline;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+
+.footer-link:hover {
+  color: white;
+  text-decoration-color: rgba(255, 255, 255, 0.8);
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
+}
+
+@media (max-width: 480px) {
+  .footer-links {
+    margin-top: 4rem;
+    padding: 2rem 0;
+  }
+
+  .footer-content {
+    padding: 0 1rem;
+  }
+
+  .footer-text {
+    font-size: 0.85rem;
+    flex-direction: column;
+    gap: 0.75rem;
+    text-align: center;
   }
 }
 </style>

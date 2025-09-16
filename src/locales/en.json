@@ -13,7 +13,10 @@
     "settings": "Settings",
     "help": "Help",
     "about": "About",
-    "history": "History"
+    "history": "History",
+    "language": "Language",
+    "privacyPolicy": "Privacy Policy",
+    "termsOfService": "Terms of Service"
   },
   "home": {
     "inputPlaceholder": "Enter the website URL to scan (e.g., https://example.com)",
@@ -29,7 +32,9 @@
     "step2Desc": "Select security scan items as needed",
     "step3": "Start Scan",
     "step3Desc": "Click the \"Start Scan\" button and wait for the results",
-    "recentScans": "Recent Scans"
+    "recentScans": "Recent Scans",
+    "footerText": "By using this service, you agree to our",
+    "and": "and"
   },
   "scanResult": {
     "title": "Security Scan Report",
@@ -74,6 +79,21 @@
     "view": "View",
     "delete": "Delete"
   },
+  "privacyPolicy": {
+    "title": "Privacy Policy",
+    "subtitle": "We value and protect your privacy",
+    "lastUpdated": "Last Updated",
+    "introduction": "Introduction",
+    "contactUs": "Contact Us"
+  },
+  "termsOfService": {
+    "title": "Terms of Service",
+    "subtitle": "Please read carefully before using our service",
+    "lastUpdated": "Last Updated",
+    "importantNotice": "Important Notice",
+    "acceptance": "Terms Acceptance",
+    "contactUs": "Contact Us"
+  },
   "status": {
     "excellent": "Excellent",
     "good": "Good",
@@ -86,8 +106,5 @@
   "errors": {
     "invalidUrl": "Please enter a valid HTTP or HTTPS address",
     "scanFailed": "Scan failed, please try again later"
-  },
-  "app": {
-    "language": "Language"
   }
 }

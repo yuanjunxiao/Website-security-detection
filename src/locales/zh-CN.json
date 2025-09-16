@@ -13,13 +13,16 @@
     "settings": "设置",
     "help": "帮助",
     "about": "关于",
-    "history": "历史记录"
+    "history": "历史记录",
+    "language": "语言",
+    "privacyPolicy": "隐私政策",
+    "termsOfService": "服务条款"
   },
   "home": {
     "inputPlaceholder": "请输入要检测的网站URL (例如: https://example.com)",
     "scanOptions": "检测选项",
     "sslCheck": "SSL/TLS 安全检测",
-    "headers极速检测": "HTTP 安全头检测",
+    "headersCheck": "HTTP 安全头检测",
     "portsCheck": "端口扫描",
     "vulnerabilitiesCheck": "常见漏洞检测",
     "howToUse": "如何使用",
@@ -29,7 +32,9 @@
     "step2Desc": "根据需要选择要进行的安全检测项目",
     "step3": "开始检测",
     "step3Desc": "点击\"开始检测\"按钮，等待检测结果",
-    "recentScans": "最近检测"
+    "recentScans": "最近检测",
+    "footerText": "使用本服务即表示您同意我们的",
+    "and": "和"
   },
   "scanResult": {
     "title": "安全扫描报告",
@@ -74,6 +79,21 @@
     "view": "查看",
     "delete": "删除"
   },
+  "privacyPolicy": {
+    "title": "隐私权政策",
+    "subtitle": "我们重视并保护您的隐私权",
+    "lastUpdated": "最后更新",
+    "introduction": "引言",
+    "contactUs": "联系我们"
+  },
+  "termsOfService": {
+    "title": "服务条款",
+    "subtitle": "使用我们的服务前请仔细阅读",
+    "lastUpdated": "最后更新",
+    "importantNotice": "重要提示",
+    "acceptance": "条款接受",
+    "contactUs": "联系我们"
+  },
   "status": {
     "excellent": "优秀",
     "good": "良好",
@@ -86,8 +106,5 @@
   "errors": {
     "invalidUrl": "请输入有效的HTTP或HTTPS地址",
     "scanFailed": "扫描失败，请稍后重试"
-  },
-  "app": {
-    "language": "语言"
   }
 }

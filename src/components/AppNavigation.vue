@@ -13,6 +13,8 @@ const navigationItems = [
   { name: '设置', path: '/settings' },
   { name: '帮助', path: '/help' },
   { name: '关于', path: '/about' },
+  { name: '隐私政策', path: '/privacy-policy' },
+  { name: '服务条款', path: '/terms-of-service' },
 ]
 
 const toggleMobileMenu = () => {

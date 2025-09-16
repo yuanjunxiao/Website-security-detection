@@ -36,6 +36,16 @@ const router = createRouter({
       component: () => import('../views/AboutView.vue'),
     },
     {
+      path: '/privacy-policy',
+      name: 'privacy-policy',
+      component: () => import('../views/PrivacyPolicy.vue'),
+    },
+    {
+      path: '/terms-of-service',
+      name: 'terms-of-service',
+      component: () => import('../views/TermsOfService.vue'),
+    },
+    {
       path: '/auth/callback',
       name: 'authCallback',
       component: () => import('../views/AuthCallback.vue'),
