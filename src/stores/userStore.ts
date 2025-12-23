@@ -7,6 +7,20 @@ export interface ScanQuota {
   deepScansRemaining: number
 }
 
+export interface UserScanStatusInfo {
+  isFirstScan: boolean      // 是否是第一次扫描
+  isPaidUser: boolean       // 是否是付费用户
+  hasValidDeepQuota: boolean // 是否有有效的深度扫描配额
+  canBasicScan: boolean     // 是否可以进行基础扫描
+  canDeepScan: boolean      // 是否可以进行深度扫描
+}
+
+export interface UserScanStats {
+  totalBasicScans: number
+  totalDeepScans: number
+  registeredAt: string
+}
+
 export interface User {
   id: string
   email: string
@@ -27,6 +41,8 @@ export const useUserStore = defineStore('user', () => {
   const isAuthenticated = ref(false)
   const isLoading = ref(false)
   const scanQuota = ref<ScanQuota | null>(null)
+  const scanStatus = ref<UserScanStatusInfo | null>(null)
+  const scanStats = ref<UserScanStats | null>(null)
 
   // 从本地存储加载用户信息
   const loadUserFromStorage = () => {
@@ -56,11 +72,23 @@ export const useUserStore = defineStore('user', () => {
     scanQuota.value = quota
   }
 
+  // 设置用户扫描状态
+  const setScanStatus = (status: UserScanStatusInfo) => {
+    scanStatus.value = status
+  }
+
+  // 设置用户扫描统计
+  const setScanStats = (stats: UserScanStats) => {
+    scanStats.value = stats
+  }
+
   // 清除用户信息
   const clearUser = () => {
     user.value = null
     isAuthenticated.value = false
     scanQuota.value = null
+    scanStatus.value = null
+    scanStats.value = null
     localStorage.removeItem('googleUser')
     localStorage.removeItem('access_token')
     localStorage.removeItem('refresh_token')
@@ -71,10 +99,10 @@ export const useUserStore = defineStore('user', () => {
     isLoading.value = loading
   }
 
-  // 检查是否有可用的基础扫描次数
+  // 检查是否有可用的基础扫描次数（免费 + 付费）
   const hasBasicScans = () => {
     if (!scanQuota.value) return false
-    return scanQuota.value.basicScansRemaining > 0
+    return scanQuota.value.freeScansRemaining > 0 || scanQuota.value.basicScansRemaining > 0
   }
 
   // 检查是否有可用的深度扫描次数
@@ -88,9 +116,13 @@ export const useUserStore = defineStore('user', () => {
     isAuthenticated,
     isLoading,
     scanQuota,
+    scanStatus,
+    scanStats,
     loadUserFromStorage,
     setUser,
     setScanQuota,
+    setScanStatus,
+    setScanStats,
     clearUser,
     setLoading,
     hasBasicScans,

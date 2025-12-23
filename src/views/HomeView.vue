@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { createScanTaskV2, pollScanTaskV2, getUserScanQuota } from '../api/scanServiceV2'
+import { createScanTaskV2, pollScanTaskV2, getUserScanStatus } from '../api/scanServiceV2'
 import { useScanStore } from '../stores/scanStore'
 import { useUserStore } from '../stores/userStore'
 import { triggerGoogleSignIn } from '../api/googleAuthService'
@@ -21,6 +21,8 @@ const scanStatus = ref('')
 const hasScanned = ref(false)
 const showLoginPrompt = ref(false)
 const showQuotaWarning = ref(false)
+const showDeepScanPaywall = ref(false)
+const isCheckingStatus = ref(false)
 
 const isScanning = ref(false)
 
@@ -34,24 +36,15 @@ const isValidUrl = computed(() => {
   }
 })
 
-// 检查是否可以进行扫描
-const canScan = computed(() => {
-  if (!userStore.isAuthenticated) return false
-  if (!userStore.scanQuota) return true // 如果还没加载配额，允许尝试
-  
-  if (scanType.value === 'basic') {
-    return userStore.scanQuota.basicScansRemaining > 0
-  } else {
-    return userStore.scanQuota.deepScansRemaining > 0
-  }
-})
-
 // 获取剩余次数显示
 const remainingScans = computed(() => {
   if (!userStore.scanQuota) return null
   
   if (scanType.value === 'basic') {
-    return userStore.scanQuota.basicScansRemaining
+    // 基础检测显示：免费次数 + 付费次数
+    const free = userStore.scanQuota.freeScansRemaining
+    const paid = userStore.scanQuota.basicScansRemaining
+    return free + paid
   } else {
     return userStore.scanQuota.deepScansRemaining
   }
@@ -71,24 +64,29 @@ const validateUrl = (url: string) => {
   }
 }
 
-// 加载用户配额
-const loadQuota = async () => {
+// 加载用户状态（配额、是否付费用户等）
+const loadUserStatus = async () => {
   if (userStore.isAuthenticated) {
     try {
-      const quota = await getUserScanQuota()
-      userStore.setScanQuota(quota)
+      const statusData = await getUserScanStatus()
+      userStore.setScanQuota(statusData.quota)
+      userStore.setScanStatus(statusData.status)
+      userStore.setScanStats(statusData.stats)
+      return statusData
     } catch (error) {
-      console.error('Failed to load quota:', error)
+      console.error('Failed to load user status:', error)
+      return null
     }
   }
+  return null
 }
 
 onMounted(() => {
-  loadQuota()
+  loadUserStatus()
 })
 
 const startScan = async () => {
-  if (!isValidUrl.value || isScanning.value) return
+  if (!isValidUrl.value || isScanning.value || isCheckingStatus.value) return
 
   // 检查是否已登录
   if (!userStore.isAuthenticated) {
@@ -96,9 +94,41 @@ const startScan = async () => {
     return
   }
 
-  // 检查配额
-  if (!canScan.value) {
-    showQuotaWarning.value = true
+  // 先从后台获取最新的用户状态
+  isCheckingStatus.value = true
+  urlError.value = ''
+  
+  try {
+    const statusData = await getUserScanStatus()
+    userStore.setScanQuota(statusData.quota)
+    userStore.setScanStatus(statusData.status)
+    userStore.setScanStats(statusData.stats)
+    
+    const { status } = statusData
+    
+    // 深度检测：必须是付费用户且有深度扫描配额
+    if (scanType.value === 'deep') {
+      if (!status.canDeepScan) {
+        isCheckingStatus.value = false
+        showDeepScanPaywall.value = true
+        return
+      }
+    }
+    
+    // 基础检测：检查是否可以进行基础扫描（免费次数 + 付费次数）
+    if (scanType.value === 'basic') {
+      if (!status.canBasicScan) {
+        isCheckingStatus.value = false
+        showQuotaWarning.value = true
+        return
+      }
+    }
+    
+    isCheckingStatus.value = false
+  } catch (error) {
+    console.error('Failed to check user status:', error)
+    isCheckingStatus.value = false
+    urlError.value = '检查用户状态失败，请稍后重试'
     return
   }
 
@@ -109,8 +139,8 @@ const startScan = async () => {
   try {
     const task = await createScanTaskV2(targetUrl.value, scanType.value)
     
-    // 更新配额
-    await loadQuota()
+    // 更新用户状态
+    await loadUserStatus()
     
     // 如果任务已完成，直接跳转
     if (task.status === 'completed') {
@@ -164,6 +194,7 @@ const handleLogin = () => {
 
 const goToPricing = () => {
   showQuotaWarning.value = false
+  showDeepScanPaywall.value = false
   router.push('/pricing')
 }
 </script>
@@ -215,11 +246,11 @@ const goToPricing = () => {
                 @input="validateUrl(targetUrl)"
                 @keyup.enter="startScan"
               />
-              <button class="scan-button" @click="startScan" :disabled="!isValidUrl || isScanning">
-                <span v-if="!isScanning">开始检测</span>
+              <button class="scan-button" @click="startScan" :disabled="!isValidUrl || isScanning || isCheckingStatus">
+                <span v-if="!isScanning && !isCheckingStatus">开始检测</span>
                 <span v-else class="scanning-text">
                   <i class="loading-icon"></i>
-                  检测中...
+                  {{ isCheckingStatus ? '检查中...' : '检测中...' }}
                 </span>
               </button>
             </div>
@@ -278,10 +309,29 @@ const goToPricing = () => {
       <div class="modal-content" @click.stop>
         <div class="modal-icon">⚠️</div>
         <h3>检测次数不足</h3>
-        <p>您的{{ scanType === 'basic' ? '基础' : '深度' }}检测次数已用完，请购买检测包继续使用</p>
+        <p>您的基础检测次数已用完，请购买检测包继续使用</p>
         <div class="modal-actions">
           <button class="btn-secondary" @click="showQuotaWarning = false">取消</button>
           <button class="btn-primary" @click="goToPricing">购买检测包</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 深度检测付费提示弹窗 -->
+    <div v-if="showDeepScanPaywall" class="modal-overlay" @click="showDeepScanPaywall = false">
+      <div class="modal-content" @click.stop>
+        <div class="modal-icon">🔬</div>
+        <h3>深度检测为付费服务</h3>
+        <p>深度检测提供全面的安全分析，包括漏洞扫描、恶意代码检测等高级功能。请购买深度检测包以使用此功能。</p>
+        <div class="deep-scan-features">
+          <div class="feature">✓ 全面漏洞扫描</div>
+          <div class="feature">✓ 恶意代码检测</div>
+          <div class="feature">✓ 详细安全报告</div>
+          <div class="feature">✓ 修复建议</div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-secondary" @click="showDeepScanPaywall = false">取消</button>
+          <button class="btn-primary" @click="goToPricing">购买深度检测</button>
         </div>
       </div>
     </div>
@@ -933,6 +983,24 @@ const goToPricing = () => {
 
 .btn-secondary:hover {
   background: #e2e8f0;
+}
+
+/* 深度检测付费弹窗特性列表 */
+.deep-scan-features {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  text-align: left;
+  padding: 1rem;
+  background: #f8fafc;
+  border-radius: 12px;
+}
+
+.deep-scan-features .feature {
+  color: #334155;
+  font-size: 0.9rem;
+  padding: 0.25rem 0;
 }
 
 @media (max-width: 768px) {

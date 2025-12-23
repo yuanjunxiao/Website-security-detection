@@ -48,6 +48,22 @@ export interface ScanQuota {
   deepScansRemaining: number
 }
 
+export interface UserScanStatus {
+  quota: ScanQuota
+  status: {
+    isFirstScan: boolean      // 是否是第一次扫描
+    isPaidUser: boolean       // 是否是付费用户
+    hasValidDeepQuota: boolean // 是否有有效的深度扫描配额
+    canBasicScan: boolean     // 是否可以进行基础扫描
+    canDeepScan: boolean      // 是否可以进行深度扫描
+  }
+  stats: {
+    totalBasicScans: number
+    totalDeepScans: number
+    registeredAt: string
+  }
+}
+
 export interface ApiResponse<T = any> {
   status: 'success' | 'error'
   data: T
@@ -175,6 +191,22 @@ export const getUserScanQuota = async (): Promise<ScanQuota> => {
   } catch (error: unknown) {
     const err = error as AxiosError<ApiResponse>
     throw new Error(`获取配额失败: ${err.message}`)
+  }
+}
+
+// 获取用户扫描状态（用于扫描前检查）
+export const getUserScanStatus = async (): Promise<UserScanStatus> => {
+  try {
+    const response = await apiClient.get<ApiResponse<UserScanStatus>>('/user/status')
+
+    if (response.data.status === 'success') {
+      return response.data.data
+    } else {
+      throw new Error(response.data.message || '获取用户状态失败')
+    }
+  } catch (error: unknown) {
+    const err = error as AxiosError<ApiResponse>
+    throw new Error(`获取用户状态失败: ${err.message}`)
   }
 }
 
