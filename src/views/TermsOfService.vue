@@ -162,7 +162,7 @@ const lastUpdated = '2024年1月1日'
             <strong>法务邮箱：</strong> legal@websecurity.xin
           </div>
           <div class="contact-item">
-            <strong>公司地址：</strong> 中国深圳市南山区腾讯大厦
+            <strong>公司地址：</strong> 中国深圳市南山区
           </div>
           <div class="contact-item">
             <strong>服务时间：</strong> 工作日 9:00-18:00 (GMT+8)

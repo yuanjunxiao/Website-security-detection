@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { RouterView } from 'vue-router'
-import AppNavigation from './components/AppNavigation.vue'
 import GoogleSignInButton from './components/GoogleSignInButton.vue'
 import { onMounted } from 'vue'
 import { initGoogleAuth } from './api/googleAuthService'
@@ -23,7 +22,6 @@ onMounted(async () => {
       <GoogleSignInButton />
     </div>
 
-    <AppNavigation />
     <main class="main-content">
       <RouterView />
     </main>
@@ -71,9 +69,11 @@ body {
 .main-content {
   flex: 1;
   width: 100%;
-  min-height: calc(100vh - 80px); /* 减去导航栏高度 */
+  min-height: 100vh;
   position: relative;
   overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .main-content::before {

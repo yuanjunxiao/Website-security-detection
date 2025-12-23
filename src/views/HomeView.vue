@@ -87,74 +87,76 @@ const startScan = async () => {
 
 <template>
   <div class="home-container">
-    <div class="header-section">
-      <h1 class="main-title">{{ title }}</h1>
-      <p class="subtitle">{{ subtitle }}</p>
-    </div>
+    <div class="content-area">
+      <div class="header-section">
+        <h1 class="main-title">{{ title }}</h1>
+        <p class="subtitle">{{ subtitle }}</p>
+      </div>
 
-    <div class="content-wrapper" style="margin-top: -2rem">
-      <div class="scan-section">
-        <div class="input-container">
-          <div class="input-group">
-            <input
-              v-model="targetUrl"
-              type="url"
-              placeholder="请输入要检测的网站URL (例如: https://example.com)"
-              class="url-input"
-              @input="validateUrl(targetUrl)"
-            />
-            <button class="scan-button" @click="startScan" :disabled="!isValidUrl || isScanning">
-              <span v-if="!isScanning">开始检测</span>
-              <span v-else class="scanning-text">
-                <i class="loading-icon"></i>
-                检测中...
-              </span>
-            </button>
+      <div class="content-wrapper">
+        <div class="scan-section">
+          <div class="input-container">
+            <div class="input-group">
+              <input
+                v-model="targetUrl"
+                type="url"
+                placeholder="请输入要检测的网站URL (例如: https://example.com)"
+                class="url-input"
+                @input="validateUrl(targetUrl)"
+              />
+              <button class="scan-button" @click="startScan" :disabled="!isValidUrl || isScanning">
+                <span v-if="!isScanning">开始检测</span>
+                <span v-else class="scanning-text">
+                  <i class="loading-icon"></i>
+                  检测中...
+                </span>
+              </button>
+            </div>
+            <div v-if="urlError" class="error-message">
+              {{ urlError }}
+            </div>
           </div>
-          <div v-if="urlError" class="error-message">
-            {{ urlError }}
+
+          <div class="scan-options">
+            <h3>检测选项</h3>
+            <div class="options-grid">
+              <label class="option-item">
+                <input type="checkbox" v-model="scanOptions.ssl" />
+                <span class="checkmark"></span>
+                <span>SSL/TLS 安全检测</span>
+              </label>
+              <label class="option-item">
+                <input type="checkbox" v-model="scanOptions.headers" />
+                <span class="checkmark"></span>
+                <span>HTTP 安全头检测</span>
+              </label>
+              <label class="option-item">
+                <input type="checkbox" v-model="scanOptions.ports" />
+                <span class="checkmark"></span>
+                <span>端口扫描</span>
+              </label>
+              <label class="option-item">
+                <input type="checkbox" v-model="scanOptions.vulnerabilities" />
+                <span class="checkmark"></span>
+                <span>常见漏洞检测</span>
+              </label>
+            </div>
           </div>
         </div>
 
-        <div class="scan-options">
-          <h3>检测选项</h3>
-          <div class="options-grid">
-            <label class="option-item">
-              <input type="checkbox" v-model="scanOptions.ssl" />
-              <span class="checkmark"></span>
-              <span>SSL/TLS 安全检测</span>
-            </label>
-            <label class="option-item">
-              <input type="checkbox" v-model="scanOptions.headers" />
-              <span class="checkmark"></span>
-              <span>HTTP 安全头检测</span>
-            </label>
-            <label class="option-item">
-              <input type="checkbox" v-model="scanOptions.ports" />
-              <span class="checkmark"></span>
-              <span>端口扫描</span>
-            </label>
-            <label class="option-item">
-              <input type="checkbox" v-model="scanOptions.vulnerabilities" />
-              <span class="checkmark"></span>
-              <span>常见漏洞检测</span>
-            </label>
+        <div v-if="isScanning" class="progress-section">
+          <div class="progress-container">
+            <div class="progress-bar">
+              <div class="progress-fill" :style="{ width: scanProgress + '%' }"></div>
+            </div>
+            <div class="progress-text">{{ scanStatus }}</div>
           </div>
         </div>
       </div>
-
-      <div v-if="isScanning" class="progress-section">
-        <div class="progress-container">
-          <div class="progress-bar">
-            <div class="progress-fill" :style="{ width: scanProgress + '%' }"></div>
-          </div>
-          <div class="progress-text">{{ scanStatus }}</div>
-        </div>
-      </div>
     </div>
 
-    <!-- 页脚链接 -->
-    <div class="footer-links">
+    <!-- 页脚链接 - 固定在底部 -->
+    <footer class="footer-links">
       <div class="footer-content">
         <div class="footer-text">
           使用本服务即表示您同意我们的
@@ -163,7 +165,7 @@ const startScan = async () => {
           <router-link to="/privacy-policy" class="footer-link">隐私权政策</router-link>
         </div>
       </div>
-    </div>
+    </footer>
   </div>
 </template>
 
@@ -175,11 +177,22 @@ const startScan = async () => {
   position: relative;
   z-index: 1;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.content-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-bottom: 2rem;
+  margin-top: -200px;
 }
 
 .header-section {
   text-align: center;
-  padding: 6rem 2rem 4rem;
+  padding: 4rem 2rem 3rem;
   margin-bottom: 0;
 }
 
@@ -503,9 +516,9 @@ const startScan = async () => {
 }
 
 .footer-links {
-  margin-top: 6rem;
-  padding: 3rem 0 2rem;
+  padding: 1.5rem 0;
   text-align: center;
+  margin-top: auto;
 }
 
 .footer-content {
@@ -542,10 +555,48 @@ const startScan = async () => {
   text-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
 }
 
+@media (max-width: 768px) {
+  .content-wrapper {
+    padding: 0 1rem;
+  }
+
+  .main-title {
+    font-size: 2.5rem;
+  }
+
+  .subtitle {
+    font-size: 1.1rem;
+  }
+
+  .header-section {
+    padding: 3rem 1rem 2rem;
+  }
+
+  .scan-section,
+  .progress-section {
+    padding: 2rem;
+    margin-bottom: 2rem;
+  }
+
+  .input-group {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .scan-button {
+    width: 100%;
+    padding: 1rem;
+  }
+
+  .options-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}
+
 @media (max-width: 480px) {
   .footer-links {
-    margin-top: 4rem;
-    padding: 2rem 0;
+    padding: 1rem 0;
   }
 
   .footer-content {
@@ -557,6 +608,10 @@ const startScan = async () => {
     flex-direction: column;
     gap: 0.75rem;
     text-align: center;
+  }
+
+  .main-title {
+    font-size: 2rem;
   }
 }
 </style>
