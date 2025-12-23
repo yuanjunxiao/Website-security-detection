@@ -4,10 +4,15 @@ import AppNavigation from './components/AppNavigation.vue'
 import GoogleSignInButton from './components/GoogleSignInButton.vue'
 import { onMounted } from 'vue'
 import { initGoogleAuth } from './api/googleAuthService'
+import { useUserStore } from './stores/userStore'
 
-onMounted(() => {
-  // 初始化 Google OAuth 检查
-  initGoogleAuth()
+const userStore = useUserStore()
+
+onMounted(async () => {
+  // 先从本地存储加载用户信息
+  userStore.loadUserFromStorage()
+  // 然后验证token是否有效
+  await initGoogleAuth()
 })
 </script>
 

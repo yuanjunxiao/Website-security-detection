@@ -6,8 +6,11 @@ export interface User {
   email: string
   name: string
   picture: string
-  givenName: string
-  familyName: string
+  verified_email?: boolean
+  locale?: string
+  provider?: string
+  createdAt?: string
+  lastLoginAt?: string
 }
 
 export const useUserStore = defineStore('user', () => {
@@ -18,9 +21,16 @@ export const useUserStore = defineStore('user', () => {
   // 从本地存储加载用户信息
   const loadUserFromStorage = () => {
     const savedUser = localStorage.getItem('googleUser')
-    if (savedUser) {
-      user.value = JSON.parse(savedUser)
-      isAuthenticated.value = true
+    const accessToken = localStorage.getItem('access_token')
+    
+    if (savedUser && accessToken) {
+      try {
+        user.value = JSON.parse(savedUser)
+        isAuthenticated.value = true
+      } catch (e) {
+        console.error('Failed to parse saved user:', e)
+        clearUser()
+      }
     }
   }
 
@@ -36,6 +46,8 @@ export const useUserStore = defineStore('user', () => {
     user.value = null
     isAuthenticated.value = false
     localStorage.removeItem('googleUser')
+    localStorage.removeItem('access_token')
+    localStorage.removeItem('refresh_token')
   }
 
   // 设置加载状态

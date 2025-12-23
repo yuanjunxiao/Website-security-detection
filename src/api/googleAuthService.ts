@@ -6,7 +6,12 @@ const API_BASE_URL =
 // 获取 Google OAuth 授权 URL
 export const getGoogleAuthUrl = async (): Promise<string> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/auth/google`)
+    // 构建当前页面的回调URL
+    const currentOrigin = window.location.origin
+    const callbackPath = '/auth/callback'
+    const redirectUri = encodeURIComponent(`${currentOrigin}${callbackPath}`)
+    
+    const response = await fetch(`${API_BASE_URL}/api/auth/google?redirect_uri=${redirectUri}`)
     if (!response.ok) {
       throw new Error('Failed to get auth URL')
     }
@@ -19,62 +24,82 @@ export const getGoogleAuthUrl = async (): Promise<string> => {
   }
 }
 
-// 处理授权码回调
-export const handleAuthCallback = async (code: string): Promise<void> => {
+// 处理OAuth回调 - 从URL参数中提取token
+export const handleOAuthTokens = async (): Promise<boolean> => {
   const userStore = useUserStore()
-  userStore.setLoading(true)
-
-  try {
-    // 发送授权码到后端
-    const response = await fetch(
-      `${API_BASE_URL}/api/auth/google/callback?code=${encodeURIComponent(code)}`,
-    )
-
-    if (!response.ok) {
-      throw new Error('Authentication failed')
-    }
-
-    const result = await response.json()
-
-    if (result.status === 'success') {
+  const urlParams = new URLSearchParams(window.location.search)
+  
+  // 检查URL中是否有token（后端OAuth回调重定向带来的）
+  const accessToken = urlParams.get('access_token')
+  const refreshToken = urlParams.get('refresh_token')
+  const error = urlParams.get('error')
+  
+  if (error) {
+    console.error('OAuth error:', error)
+    return false
+  }
+  
+  if (accessToken && refreshToken) {
+    userStore.setLoading(true)
+    
+    try {
+      // 存储token
+      localStorage.setItem('access_token', accessToken)
+      localStorage.setItem('refresh_token', refreshToken)
+      
       // 获取用户信息
       const userResponse = await fetch(`${API_BASE_URL}/api/auth/me`, {
         headers: {
-          Authorization: `Bearer ${result.data.accessToken}`,
+          Authorization: `Bearer ${accessToken}`,
         },
       })
 
       if (userResponse.ok) {
         const userResult = await userResponse.json()
-        userStore.setUser(userResult.data)
-
-        // 存储token
-        localStorage.setItem('access_token', result.data.accessToken)
-        localStorage.setItem('refresh_token', result.data.refreshToken)
+        if (userResult.status === 'success') {
+          userStore.setUser(userResult.data)
+          return true
+        }
       }
-    } else {
-      throw new Error(result.message || 'Authentication failed')
+      
+      // 如果获取用户信息失败，清除token
+      localStorage.removeItem('access_token')
+      localStorage.removeItem('refresh_token')
+      return false
+    } catch (error) {
+      console.error('Error fetching user info:', error)
+      localStorage.removeItem('access_token')
+      localStorage.removeItem('refresh_token')
+      return false
+    } finally {
+      userStore.setLoading(false)
     }
-  } catch (error) {
-    console.error('Authentication error:', error)
-    throw error
-  } finally {
-    userStore.setLoading(false)
   }
+  
+  return false
 }
 
-// 初始化 Google 登录
-export const initGoogleAuth = (): void => {
-  // 检查URL中是否有授权码
-  const urlParams = new URLSearchParams(window.location.search)
-  const code = urlParams.get('code')
-
-  if (code) {
-    handleAuthCallback(code).then(() => {
-      // 清除URL中的code参数
-      const newUrl = window.location.pathname
-      window.history.replaceState({}, document.title, newUrl)
-    })
+// 初始化 Google 登录 - 检查是否已登录
+export const initGoogleAuth = async (): Promise<void> => {
+  const userStore = useUserStore()
+  
+  // 如果已经认证，不需要再初始化
+  if (userStore.isAuthenticated) {
+    return
+  }
+  
+  // 检查本地存储中是否有token
+  const accessToken = localStorage.getItem('access_token')
+  if (accessToken) {
+    // 验证token是否有效
+    const isValid = await checkAuthStatus()
+    if (!isValid) {
+      // token无效，尝试刷新
+      const newToken = await refreshAccessToken()
+      if (newToken) {
+        await checkAuthStatus()
+      }
+    }
   }
 }
 
