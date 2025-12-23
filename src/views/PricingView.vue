@@ -1,10 +1,20 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '../stores/userStore'
-import { getProducts, createOrder, simulatePayment, type Product } from '../api/orderService'
+import { getProducts, simulatePayment, type Product } from '../api/orderService'
 import { triggerGoogleSignIn } from '../api/googleAuthService'
 import { getUserScanQuota } from '../api/scanServiceV2'
+import { 
+  getStripeConfig, 
+  loadStripe, 
+  createStripeOrder, 
+  createPaymentElement,
+  submitPayment,
+  confirmStripePayment,
+  formatAmount,
+  type StripeConfig 
+} from '../api/stripeService'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -12,12 +22,18 @@ const userStore = useUserStore()
 const products = ref<Product[]>([])
 const isLoading = ref(true)
 const selectedProduct = ref<string | null>(null)
-const selectedPayment = ref<'wechat' | 'alipay'>('wechat')
+const selectedPayment = ref<'stripe' | 'wechat' | 'alipay'>('stripe')
 const showPaymentModal = ref(false)
 const showLoginPrompt = ref(false)
 const isProcessing = ref(false)
 const orderInfo = ref<any>(null)
 const errorMessage = ref('')
+
+// Stripe 相关
+const stripeConfig = ref<StripeConfig | null>(null)
+const stripeElements = ref<any>(null)
+const paymentElementContainer = ref<HTMLElement | null>(null)
+const stripePaymentReady = ref(false)
 
 // 加载产品列表
 const loadProducts = async () => {
@@ -28,6 +44,15 @@ const loadProducts = async () => {
     console.error('Failed to load products:', error)
   } finally {
     isLoading.value = false
+  }
+}
+
+// 加载 Stripe 配置
+const loadStripeConfig = async () => {
+  try {
+    stripeConfig.value = await getStripeConfig()
+  } catch (error) {
+    console.error('Failed to load Stripe config:', error)
   }
 }
 
@@ -45,6 +70,7 @@ const loadQuota = async () => {
 
 onMounted(() => {
   loadProducts()
+  loadStripeConfig()
   loadQuota()
 })
 
@@ -58,6 +84,8 @@ const selectProduct = (productId: string) => {
   selectedProduct.value = productId
   showPaymentModal.value = true
   errorMessage.value = ''
+  orderInfo.value = null
+  stripePaymentReady.value = false
 }
 
 // 处理登录
@@ -66,7 +94,7 @@ const handleLogin = () => {
   triggerGoogleSignIn()
 }
 
-// 创建订单
+// 创建订单并初始化支付
 const handleCreateOrder = async () => {
   if (!selectedProduct.value) return
   
@@ -74,15 +102,88 @@ const handleCreateOrder = async () => {
   errorMessage.value = ''
   
   try {
-    const result = await createOrder(selectedProduct.value, selectedPayment.value)
-    orderInfo.value = result
-    
-    // 如果是开发环境，显示模拟支付按钮
-    if (import.meta.env.DEV) {
-      // 开发环境下可以模拟支付
+    if (selectedPayment.value === 'stripe') {
+      // Stripe 支付流程
+      const result = await createStripeOrder(selectedProduct.value)
+      orderInfo.value = result
+      
+      if (result.payment?.clientSecret) {
+        // 等待 DOM 更新后初始化 Payment Element
+        setTimeout(async () => {
+          await initStripePaymentElement(result.payment.clientSecret)
+        }, 100)
+      } else if (result.payment?.error) {
+        errorMessage.value = result.payment.message || 'Stripe 支付暂不可用'
+      }
+    } else {
+      // 微信/支付宝支付流程（暂未实现）
+      errorMessage.value = '该支付方式暂未开放，请使用 Google Pay 或信用卡支付'
     }
   } catch (error: any) {
     errorMessage.value = error.message || '创建订单失败'
+  } finally {
+    isProcessing.value = false
+  }
+}
+
+// 初始化 Stripe Payment Element
+const initStripePaymentElement = async (clientSecret: string) => {
+  try {
+    const container = document.getElementById('stripe-payment-element')
+    if (!container) {
+      console.error('Payment element container not found')
+      return
+    }
+    
+    const { elements, paymentElement } = await createPaymentElement(clientSecret, container)
+    stripeElements.value = elements
+    
+    paymentElement.on('ready', () => {
+      stripePaymentReady.value = true
+    })
+    
+    paymentElement.on('change', (event: any) => {
+      if (event.error) {
+        errorMessage.value = event.error.message
+      } else {
+        errorMessage.value = ''
+      }
+    })
+  } catch (error: any) {
+    console.error('Failed to init Stripe payment element:', error)
+    errorMessage.value = error.message || '初始化支付失败'
+  }
+}
+
+// 提交 Stripe 支付
+const handleStripePayment = async () => {
+  if (!stripeElements.value || !orderInfo.value) return
+  
+  isProcessing.value = true
+  errorMessage.value = ''
+  
+  try {
+    const returnUrl = `${window.location.origin}/payment-success?orderId=${orderInfo.value.order.orderId}`
+    
+    const { error, paymentIntent } = await submitPayment(stripeElements.value, returnUrl)
+    
+    if (error) {
+      errorMessage.value = error.message || '支付失败'
+    } else if (paymentIntent?.status === 'succeeded') {
+      // 支付成功
+      await confirmStripePayment(orderInfo.value.order.orderId, paymentIntent.id)
+      await loadQuota()
+      
+      showPaymentModal.value = false
+      orderInfo.value = null
+      selectedProduct.value = null
+      
+      alert('支付成功！检测次数已添加到您的账户')
+    } else if (paymentIntent?.status === 'processing') {
+      errorMessage.value = '支付处理中，请稍候...'
+    }
+  } catch (error: any) {
+    errorMessage.value = error.message || '支付失败'
   } finally {
     isProcessing.value = false
   }
@@ -120,6 +221,8 @@ const closePaymentModal = () => {
   orderInfo.value = null
   selectedProduct.value = null
   errorMessage.value = ''
+  stripeElements.value = null
+  stripePaymentReady.value = false
 }
 
 // 获取产品图标
@@ -139,6 +242,16 @@ const getProductTag = (productId: string) => {
     deep_pack: '最划算'
   }
   return tags[productId] || ''
+}
+
+// 获取产品美元价格
+const getUSDPrice = (productId: string) => {
+  const prices: Record<string, number> = {
+    basic_pack: 199,
+    deep_single: 99,
+    deep_pack: 499
+  }
+  return prices[productId] ? formatAmount(prices[productId], 'usd') : ''
 }
 </script>
 
@@ -240,6 +353,12 @@ const getProductTag = (productId: string) => {
           <h3>选择支付方式</h3>
           
           <div class="payment-methods">
+            <label :class="['payment-option', { active: selectedPayment === 'stripe', recommended: stripeConfig?.isConfigured }]">
+              <input type="radio" v-model="selectedPayment" value="stripe" />
+              <span class="payment-icon">💳</span>
+              <span>Google Pay / 信用卡</span>
+              <span v-if="stripeConfig?.isConfigured" class="recommended-tag">推荐</span>
+            </label>
             <label :class="['payment-option', { active: selectedPayment === 'wechat' }]">
               <input type="radio" v-model="selectedPayment" value="wechat" />
               <span class="payment-icon">💚</span>
@@ -264,23 +383,48 @@ const getProductTag = (productId: string) => {
         </template>
         
         <template v-else>
-          <h3>订单已创建</h3>
+          <h3>{{ orderInfo.payment?.type === 'stripe' ? '完成支付' : '订单已创建' }}</h3>
           
           <div class="order-info">
             <p><strong>订单号：</strong>{{ orderInfo.order.orderNo }}</p>
             <p><strong>产品：</strong>{{ orderInfo.order.productName }}</p>
-            <p><strong>金额：</strong>¥{{ orderInfo.order.amount.toFixed(2) }}</p>
+            <p><strong>金额：</strong>¥{{ orderInfo.order.amount.toFixed(2) }} 
+              <span v-if="getUSDPrice(orderInfo.order.productType)" class="usd-price">
+                (≈ {{ getUSDPrice(orderInfo.order.productType) }})
+              </span>
+            </p>
           </div>
           
-          <div v-if="orderInfo.payment?.message" class="payment-notice">
+          <!-- Stripe Payment Element -->
+          <div v-if="orderInfo.payment?.type === 'stripe' && orderInfo.payment?.clientSecret">
+            <div id="stripe-payment-element" class="stripe-element"></div>
+            
+            <div v-if="errorMessage" class="error-message">{{ errorMessage }}</div>
+            
+            <button 
+              class="btn-primary full-width stripe-pay-btn" 
+              @click="handleStripePayment"
+              :disabled="isProcessing || !stripePaymentReady"
+            >
+              {{ isProcessing ? '处理中...' : '立即支付' }}
+            </button>
+            
+            <div class="payment-secure-note">
+              <span class="lock-icon">🔒</span>
+              <span>支付由 Stripe 安全处理，支持 Google Pay、Apple Pay 和信用卡</span>
+            </div>
+          </div>
+          
+          <!-- 其他支付方式提示 -->
+          <div v-else-if="orderInfo.payment?.message" class="payment-notice">
             {{ orderInfo.payment.message }}
           </div>
           
-          <div v-if="errorMessage" class="error-message">{{ errorMessage }}</div>
+          <div v-if="errorMessage && orderInfo.payment?.type !== 'stripe'" class="error-message">{{ errorMessage }}</div>
           
           <!-- 开发环境显示模拟支付按钮 -->
           <button 
-            v-if="true"
+            v-if="orderInfo.payment?.type !== 'stripe'"
             class="btn-primary full-width" 
             @click="handleSimulatePayment"
             :disabled="isProcessing"
@@ -674,5 +818,60 @@ const getProductTag = (productId: string) => {
   .payment-methods {
     flex-direction: column;
   }
+}
+
+/* Stripe 相关样式 */
+.stripe-element {
+  padding: 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  background: #fafafa;
+  min-height: 100px;
+}
+
+.stripe-pay-btn {
+  margin-top: 0.5rem;
+}
+
+.payment-secure-note {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  color: #64748b;
+  font-size: 0.8rem;
+}
+
+.lock-icon {
+  font-size: 1rem;
+}
+
+.usd-price {
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.recommended-tag {
+  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+  color: white;
+  font-size: 0.7rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 10px;
+  margin-left: 0.5rem;
+}
+
+.payment-option.recommended {
+  border-color: #10B981;
+}
+
+.payment-option.recommended.active {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: #10B981;
+}
+
+.payment-modal {
+  max-width: 480px;
 }
 </style>
