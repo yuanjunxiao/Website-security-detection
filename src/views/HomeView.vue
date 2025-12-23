@@ -201,6 +201,12 @@ const goToPricing = () => {
 
 <template>
   <div class="home-container">
+    <!-- 开发中提示横幅 -->
+    <div class="dev-banner">
+      <span class="dev-icon">🚧</span>
+      <span class="dev-text">本站正在开发中，部分功能可能不稳定，感谢您的理解与支持！</span>
+    </div>
+
     <div class="content-area">
       <div class="header-section">
         <h1 class="main-title">{{ title }}</h1>
@@ -360,6 +366,30 @@ const goToPricing = () => {
   overflow: hidden;
   display: flex;
   flex-direction: column;
+}
+
+/* 开发中提示横幅 */
+.dev-banner {
+  background: linear-gradient(90deg, #ff9800, #f57c00);
+  color: white;
+  padding: 10px 20px;
+  text-align: center;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 2px 8px rgba(255, 152, 0, 0.3);
+  position: relative;
+  z-index: 100;
+}
+
+.dev-icon {
+  font-size: 1.1rem;
+}
+
+.dev-text {
+  font-weight: 500;
 }
 
 .content-area {
