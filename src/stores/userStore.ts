@@ -1,6 +1,12 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
+export interface ScanQuota {
+  freeScansRemaining: number
+  basicScansRemaining: number
+  deepScansRemaining: number
+}
+
 export interface User {
   id: string
   email: string
@@ -11,12 +17,16 @@ export interface User {
   provider?: string
   createdAt?: string
   lastLoginAt?: string
+  freeScansRemaining?: number
+  totalBasicScans?: number
+  totalDeepScans?: number
 }
 
 export const useUserStore = defineStore('user', () => {
   const user = ref<User | null>(null)
   const isAuthenticated = ref(false)
   const isLoading = ref(false)
+  const scanQuota = ref<ScanQuota | null>(null)
 
   // 从本地存储加载用户信息
   const loadUserFromStorage = () => {
@@ -41,10 +51,16 @@ export const useUserStore = defineStore('user', () => {
     localStorage.setItem('googleUser', JSON.stringify(userData))
   }
 
+  // 设置扫描配额
+  const setScanQuota = (quota: ScanQuota) => {
+    scanQuota.value = quota
+  }
+
   // 清除用户信息
   const clearUser = () => {
     user.value = null
     isAuthenticated.value = false
+    scanQuota.value = null
     localStorage.removeItem('googleUser')
     localStorage.removeItem('access_token')
     localStorage.removeItem('refresh_token')
@@ -55,13 +71,29 @@ export const useUserStore = defineStore('user', () => {
     isLoading.value = loading
   }
 
+  // 检查是否有可用的基础扫描次数
+  const hasBasicScans = () => {
+    if (!scanQuota.value) return false
+    return scanQuota.value.basicScansRemaining > 0
+  }
+
+  // 检查是否有可用的深度扫描次数
+  const hasDeepScans = () => {
+    if (!scanQuota.value) return false
+    return scanQuota.value.deepScansRemaining > 0
+  }
+
   return {
     user,
     isAuthenticated,
     isLoading,
+    scanQuota,
     loadUserFromStorage,
     setUser,
+    setScanQuota,
     clearUser,
-    setLoading
+    setLoading,
+    hasBasicScans,
+    hasDeepScans
   }
 })

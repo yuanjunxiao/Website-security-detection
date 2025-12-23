@@ -1,26 +1,26 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { createScanTask, pollScanTask } from '../api/scanService'
+import { createScanTaskV2, pollScanTaskV2, getUserScanQuota } from '../api/scanServiceV2'
 import { useScanStore } from '../stores/scanStore'
+import { useUserStore } from '../stores/userStore'
+import { triggerGoogleSignIn } from '../api/googleAuthService'
 
 const title = '你访问的网络安全吗？'
-const subtitle = '网站安全扫描器，一键检测，安全上网(功能开发中，敬请期待)'
+const subtitle = '网站安全扫描器，一键检测，安全上网'
 
 const router = useRouter()
 const scanStore = useScanStore()
+const userStore = useUserStore()
 
 const targetUrl = ref('')
 const urlError = ref('')
-const scanOptions = ref({
-  ssl: true,
-  headers: true,
-  ports: false,
-  vulnerabilities: true,
-})
+const scanType = ref<'basic' | 'deep'>('basic')
 const scanProgress = ref(0)
 const scanStatus = ref('')
 const hasScanned = ref(false)
+const showLoginPrompt = ref(false)
+const showQuotaWarning = ref(false)
 
 const isScanning = ref(false)
 
@@ -31,6 +31,29 @@ const isValidUrl = computed(() => {
     return url.protocol === 'http:' || url.protocol === 'https:'
   } catch {
     return false
+  }
+})
+
+// 检查是否可以进行扫描
+const canScan = computed(() => {
+  if (!userStore.isAuthenticated) return false
+  if (!userStore.scanQuota) return true // 如果还没加载配额，允许尝试
+  
+  if (scanType.value === 'basic') {
+    return userStore.scanQuota.basicScansRemaining > 0
+  } else {
+    return userStore.scanQuota.deepScansRemaining > 0
+  }
+})
+
+// 获取剩余次数显示
+const remainingScans = computed(() => {
+  if (!userStore.scanQuota) return null
+  
+  if (scanType.value === 'basic') {
+    return userStore.scanQuota.basicScansRemaining
+  } else {
+    return userStore.scanQuota.deepScansRemaining
   }
 })
 
@@ -48,23 +71,73 @@ const validateUrl = (url: string) => {
   }
 }
 
+// 加载用户配额
+const loadQuota = async () => {
+  if (userStore.isAuthenticated) {
+    try {
+      const quota = await getUserScanQuota()
+      userStore.setScanQuota(quota)
+    } catch (error) {
+      console.error('Failed to load quota:', error)
+    }
+  }
+}
+
+onMounted(() => {
+  loadQuota()
+})
+
 const startScan = async () => {
   if (!isValidUrl.value || isScanning.value) return
+
+  // 检查是否已登录
+  if (!userStore.isAuthenticated) {
+    showLoginPrompt.value = true
+    return
+  }
+
+  // 检查配额
+  if (!canScan.value) {
+    showQuotaWarning.value = true
+    return
+  }
 
   isScanning.value = true
   hasScanned.value = true
   urlError.value = ''
 
   try {
-    const task = await createScanTask(targetUrl.value)
+    const task = await createScanTaskV2(targetUrl.value, scanType.value)
+    
+    // 更新配额
+    await loadQuota()
+    
+    // 如果任务已完成，直接跳转
+    if (task.status === 'completed') {
+      scanStore.setScanResult({
+        url: targetUrl.value,
+        options: { ssl: true, headers: true, ports: false, vulnerabilities: true },
+        taskId: task.taskId,
+        status: task.status,
+      })
+
+      router.push({
+        name: 'ScanResult',
+        params: {
+          taskId: task.taskId,
+        },
+      })
+      return
+    }
+    
     // 开始轮询任务状态
-    const finalTask = await pollScanTask(task.taskId, (progressTask) => {
+    const finalTask = await pollScanTaskV2(task.taskId, (progressTask) => {
       // 可以在这里更新进度状态
     })
 
     scanStore.setScanResult({
       url: targetUrl.value,
-      options: scanOptions.value,
+      options: { ssl: true, headers: true, ports: false, vulnerabilities: true },
       taskId: finalTask.taskId,
       status: finalTask.status,
     })
@@ -83,6 +156,16 @@ const startScan = async () => {
     isScanning.value = false
   }
 }
+
+const handleLogin = () => {
+  showLoginPrompt.value = false
+  triggerGoogleSignIn()
+}
+
+const goToPricing = () => {
+  showQuotaWarning.value = false
+  router.push('/pricing')
+}
 </script>
 
 <template>
@@ -95,6 +178,33 @@ const startScan = async () => {
 
       <div class="content-wrapper">
         <div class="scan-section">
+          <!-- 扫描类型选择 -->
+          <div class="scan-type-selector">
+            <button 
+              :class="['type-btn', { active: scanType === 'basic' }]"
+              @click="scanType = 'basic'"
+            >
+              <span class="type-icon">🔍</span>
+              <span class="type-name">基础检测</span>
+              <span class="type-desc">快速安全扫描</span>
+            </button>
+            <button 
+              :class="['type-btn', { active: scanType === 'deep' }]"
+              @click="scanType = 'deep'"
+            >
+              <span class="type-icon">🔬</span>
+              <span class="type-name">深度检测</span>
+              <span class="type-desc">全面安全分析</span>
+            </button>
+          </div>
+
+          <!-- 剩余次数显示 -->
+          <div v-if="userStore.isAuthenticated && remainingScans !== null" class="quota-info">
+            <span class="quota-label">剩余{{ scanType === 'basic' ? '基础' : '深度' }}检测次数：</span>
+            <span :class="['quota-count', { warning: remainingScans <= 1 }]">{{ remainingScans }}</span>
+            <router-link v-if="remainingScans <= 1" to="/pricing" class="buy-more">购买更多</router-link>
+          </div>
+
           <div class="input-container">
             <div class="input-group">
               <input
@@ -103,6 +213,7 @@ const startScan = async () => {
                 placeholder="请输入要检测的网站URL (例如: https://example.com)"
                 class="url-input"
                 @input="validateUrl(targetUrl)"
+                @keyup.enter="startScan"
               />
               <button class="scan-button" @click="startScan" :disabled="!isValidUrl || isScanning">
                 <span v-if="!isScanning">开始检测</span>
@@ -117,29 +228,23 @@ const startScan = async () => {
             </div>
           </div>
 
-          <div class="scan-options">
-            <h3>检测选项</h3>
-            <div class="options-grid">
-              <label class="option-item">
-                <input type="checkbox" v-model="scanOptions.ssl" />
-                <span class="checkmark"></span>
-                <span>SSL/TLS 安全检测</span>
-              </label>
-              <label class="option-item">
-                <input type="checkbox" v-model="scanOptions.headers" />
-                <span class="checkmark"></span>
-                <span>HTTP 安全头检测</span>
-              </label>
-              <label class="option-item">
-                <input type="checkbox" v-model="scanOptions.ports" />
-                <span class="checkmark"></span>
-                <span>端口扫描</span>
-              </label>
-              <label class="option-item">
-                <input type="checkbox" v-model="scanOptions.vulnerabilities" />
-                <span class="checkmark"></span>
-                <span>常见漏洞检测</span>
-              </label>
+          <!-- 功能说明 -->
+          <div class="features-info">
+            <div class="feature-item">
+              <span class="feature-icon">✓</span>
+              <span>诈骗风险检测</span>
+            </div>
+            <div class="feature-item">
+              <span class="feature-icon">✓</span>
+              <span>恶意软件检测</span>
+            </div>
+            <div class="feature-item">
+              <span class="feature-icon">✓</span>
+              <span>钓鱼网站识别</span>
+            </div>
+            <div class="feature-item">
+              <span class="feature-icon">✓</span>
+              <span>安全评分</span>
             </div>
           </div>
         </div>
@@ -149,8 +254,34 @@ const startScan = async () => {
             <div class="progress-bar">
               <div class="progress-fill" :style="{ width: scanProgress + '%' }"></div>
             </div>
-            <div class="progress-text">{{ scanStatus }}</div>
+            <div class="progress-text">{{ scanStatus || '正在检测中...' }}</div>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 登录提示弹窗 -->
+    <div v-if="showLoginPrompt" class="modal-overlay" @click="showLoginPrompt = false">
+      <div class="modal-content" @click.stop>
+        <div class="modal-icon">🔐</div>
+        <h3>请先登录</h3>
+        <p>登录后即可使用网站安全检测功能，新用户可免费检测1次</p>
+        <div class="modal-actions">
+          <button class="btn-secondary" @click="showLoginPrompt = false">取消</button>
+          <button class="btn-primary" @click="handleLogin">Google 登录</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 配额不足提示弹窗 -->
+    <div v-if="showQuotaWarning" class="modal-overlay" @click="showQuotaWarning = false">
+      <div class="modal-content" @click.stop>
+        <div class="modal-icon">⚠️</div>
+        <h3>检测次数不足</h3>
+        <p>您的{{ scanType === 'basic' ? '基础' : '深度' }}检测次数已用完，请购买检测包继续使用</p>
+        <div class="modal-actions">
+          <button class="btn-secondary" @click="showQuotaWarning = false">取消</button>
+          <button class="btn-primary" @click="goToPricing">购买检测包</button>
         </div>
       </div>
     </div>
@@ -612,6 +743,212 @@ const startScan = async () => {
 
   .main-title {
     font-size: 2rem;
+  }
+}
+
+/* 扫描类型选择器 */
+.scan-type-selector {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.type-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem 2rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 150px;
+}
+
+.type-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateY(-2px);
+}
+
+.type-btn.active {
+  background: rgba(102, 126, 234, 0.3);
+  border-color: #667eea;
+  box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
+}
+
+.type-icon {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.type-name {
+  color: white;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.type-desc {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+}
+
+/* 配额信息 */
+.quota-info {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.9rem;
+}
+
+.quota-label {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.quota-count {
+  font-weight: 700;
+  color: #10B981;
+  font-size: 1.1rem;
+}
+
+.quota-count.warning {
+  color: #F59E0B;
+}
+
+.buy-more {
+  color: #93c5fd;
+  text-decoration: underline;
+  margin-left: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.buy-more:hover {
+  color: white;
+}
+
+/* 功能说明 */
+.features-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 1.5rem;
+}
+
+.feature-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.9rem;
+  padding: 0.5rem 1rem;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+}
+
+.feature-icon {
+  color: #10B981;
+  font-weight: bold;
+}
+
+/* 弹窗样式 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+}
+
+.modal-content {
+  background: white;
+  border-radius: 20px;
+  padding: 2rem;
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.modal-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.modal-content h3 {
+  color: #1a202c;
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.modal-content p {
+  color: #64748b;
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.btn-primary {
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+}
+
+.btn-secondary {
+  padding: 0.75rem 1.5rem;
+  background: #f1f5f9;
+  color: #64748b;
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+  background: #e2e8f0;
+}
+
+@media (max-width: 768px) {
+  .scan-type-selector {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .type-btn {
+    width: 100%;
+    max-width: 300px;
+  }
+  
+  .features-info {
+    flex-direction: column;
+    align-items: center;
   }
 }
 </style>

@@ -12,7 +12,13 @@ const router = createRouter({
     {
       path: '/scan-result',
       name: 'ScanResult',
-      component: () => import('../views/ScanResult.vue'),
+      component: () => import('../views/ScanResultV2.vue'),
+      props: true,
+    },
+    {
+      path: '/scan-result/:taskId',
+      name: 'ScanResultWithId',
+      component: () => import('../views/ScanResultV2.vue'),
       props: true,
     },
     {
@@ -49,6 +55,11 @@ const router = createRouter({
       path: '/auth/callback',
       name: 'authCallback',
       component: () => import('../views/AuthCallback.vue'),
+    },
+    {
+      path: '/pricing',
+      name: 'pricing',
+      component: () => import('../views/PricingView.vue'),
     },
     {
       path: '/:pathMatch(.*)*',
