@@ -5,6 +5,7 @@ import { createScanTaskV2, pollScanTaskV2, getUserScanStatus } from '../api/scan
 import { useScanStore } from '../stores/scanStore'
 import { useUserStore } from '../stores/userStore'
 import { triggerGoogleSignIn } from '../api/googleAuthService'
+import { trackScanStart, trackScanComplete, trackLogin, trackError } from '../utils/analytics'
 
 const title = '你访问的网络安全吗？'
 const subtitle = '网站安全扫描器，一键检测，安全上网'
@@ -136,6 +137,10 @@ const startScan = async () => {
   hasScanned.value = true
   urlError.value = ''
 
+  // 追踪扫描开始事件
+  trackScanStart(scanType.value, targetUrl.value)
+  const scanStartTime = Date.now()
+
   try {
     const task = await createScanTaskV2(targetUrl.value, scanType.value)
     
@@ -144,6 +149,10 @@ const startScan = async () => {
     
     // 如果任务已完成，直接跳转
     if (task.status === 'completed') {
+      // 追踪扫描完成
+      const duration = Math.round((Date.now() - scanStartTime) / 1000)
+      trackScanComplete(scanType.value, task.result?.riskLevel || 'unknown', duration)
+      
       scanStore.setScanResult({
         url: targetUrl.value,
         options: { ssl: true, headers: true, ports: false, vulnerabilities: true },
@@ -165,6 +174,10 @@ const startScan = async () => {
       // 可以在这里更新进度状态
     })
 
+    // 追踪扫描完成
+    const duration = Math.round((Date.now() - scanStartTime) / 1000)
+    trackScanComplete(scanType.value, finalTask.result?.riskLevel || 'unknown', duration)
+
     scanStore.setScanResult({
       url: targetUrl.value,
       options: { ssl: true, headers: true, ports: false, vulnerabilities: true },
@@ -182,6 +195,8 @@ const startScan = async () => {
     const err = error as Error
     console.error('扫描失败:', err)
     urlError.value = err.message || '扫描失败，请稍后重试'
+    // 追踪错误
+    trackError(err.message || '扫描失败', 'scan_error')
   } finally {
     isScanning.value = false
   }
@@ -189,6 +204,8 @@ const startScan = async () => {
 
 const handleLogin = () => {
   showLoginPrompt.value = false
+  // 追踪登录点击
+  trackLogin('google')
   triggerGoogleSignIn()
 }
 

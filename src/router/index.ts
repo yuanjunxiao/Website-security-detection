@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
+import { trackPageView } from '../utils/analytics'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -68,5 +69,31 @@ const router = createRouter({
     },
   ],
 })
+
+// 路由变化时追踪页面浏览
+router.afterEach((to) => {
+  // 获取页面标题
+  const pageTitle = to.meta.title as string || getPageTitle(to.name as string)
+  trackPageView(to.fullPath, pageTitle)
+})
+
+// 根据路由名称获取页面标题
+function getPageTitle(routeName: string): string {
+  const titles: Record<string, string> = {
+    home: '首页 - 网站安全扫描器',
+    ScanResult: '扫描结果',
+    ScanResultWithId: '扫描结果',
+    history: '扫描历史',
+    settings: '设置',
+    help: '帮助中心',
+    about: '关于我们',
+    'privacy-policy': '隐私政策',
+    'terms-of-service': '服务条款',
+    authCallback: '登录中...',
+    pricing: '购买套餐',
+    NotFound: '页面未找到'
+  }
+  return titles[routeName] || '网站安全扫描器'
+}
 
 export default router

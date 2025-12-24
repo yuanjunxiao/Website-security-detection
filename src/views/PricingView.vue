@@ -15,6 +15,7 @@ import {
   formatAmount,
   type StripeConfig 
 } from '../api/stripeService'
+import { trackBeginCheckout, trackPurchase, trackError } from '../utils/analytics'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -101,6 +102,12 @@ const handleCreateOrder = async () => {
   isProcessing.value = true
   errorMessage.value = ''
   
+  // 获取选中的产品信息用于追踪
+  const product = products.value.find(p => p.id === selectedProduct.value)
+  if (product) {
+    trackBeginCheckout(product.id, product.price)
+  }
+  
   try {
     if (selectedPayment.value === 'stripe') {
       // Stripe 支付流程
@@ -121,6 +128,7 @@ const handleCreateOrder = async () => {
     }
   } catch (error: any) {
     errorMessage.value = error.message || '创建订单失败'
+    trackError(error.message || '创建订单失败', 'checkout_error')
   } finally {
     isProcessing.value = false
   }
@@ -169,10 +177,17 @@ const handleStripePayment = async () => {
     
     if (error) {
       errorMessage.value = error.message || '支付失败'
+      trackError(error.message || '支付失败', 'payment_error')
     } else if (paymentIntent?.status === 'succeeded') {
       // 支付成功
       await confirmStripePayment(orderInfo.value.order.orderId, paymentIntent.id)
       await loadQuota()
+      
+      // 追踪购买成功
+      const product = products.value.find(p => p.id === selectedProduct.value)
+      if (product) {
+        trackPurchase(orderInfo.value.order.orderId, product.id, product.price)
+      }
       
       showPaymentModal.value = false
       orderInfo.value = null
@@ -184,6 +199,7 @@ const handleStripePayment = async () => {
     }
   } catch (error: any) {
     errorMessage.value = error.message || '支付失败'
+    trackError(error.message || '支付失败', 'payment_error')
   } finally {
     isProcessing.value = false
   }
